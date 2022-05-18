@@ -8,7 +8,7 @@ import pgdb
 
 Re = 2
 
-functionsCatalog = [{"name":'AMF', "cpu": 2}, {"name": 'SMF', "cpu": 2}, {"name": 'UPF', "cpu": 8}]
+functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.9}, {"name": 'SMF', "cpu": 2, "availability": 0.8}, {"name": 'UPF', "cpu": 8, "availability": 0.9}]
 servicesCatalog = [[0, 1], [2]]
 sliceRequests = [{"services": [0, 1], "availability": 0.99},
                  {"services": [0, 1], "availability": 0.99},
@@ -17,9 +17,12 @@ sliceRequests = [{"services": [0, 1], "availability": 0.99},
 {"services": [0, 1], "availability": 0.99},
                  {"services": [0, 1], "availability": 0.99}]
 
-originalNodeCapacities = [10, 10, 16]
-nodeCapacity = [10, 10, 16]
+originalNodeCapacities = [100, 100, 160]
+nodeCapacity = [100, 100, 160]
 N = len(nodeCapacity)
+
+# Failure probability of a physical node
+hN = 0.001
 
 def resetNodes():
     for n, o in zip(nodeCapacity, originalNodeCapacities):
@@ -73,15 +76,25 @@ def sort(array=[]):
     else:
         return array
 
-def computeNumberOfReplicasNeeded(Av):
-    return 1
+def computeNumberOfReplicasNeeded(fAv, targetAv):
+    avFN = (1 - hN) * fAv
+    for n in range(1, 100):
+        avF = 1 - ((1 - avFN) ** n)
+        if avF >= targetAv:
+            numberOfReplicas = n
+            break
 
-def onboard(networkFunction):
-    Av = networkFunction.availability
+    return 0 if avF < targetAv else numberOfReplicas
+
+def onboard(networkFunction, targetAv):
+    functionAv = networkFunction.availability
     Rcpu = networkFunction.cpu
 
-    replicasNeeded = computeNumberOfReplicasNeeded(Av)
+    replicasNeeded = computeNumberOfReplicasNeeded(functionAv, targetAv)
 
+    if replicasNeeded == 0:
+        print("The number of replicas needed is too high")
+        return 1
     # Sort N in decreasing Cn order
 
     i = 0
@@ -170,15 +183,16 @@ if __name__ == '__main__':
                         if u["name"] == functionsCatalog[f]["name"]:
                             #type = u["name"]
                             cpu = u["cpu"]
+                            av = u["availability"]
                             break
 
-                    netFunc = Function(functionsCatalog[f]["name"], cpu, r["availability"])
+                    netFunc = Function(functionsCatalog[f]["name"], cpu, av)
                     FFunctions.append(netFunc)
 
                     # TODO: Add availability value
-                    db.insertFunction(functionsCatalog[f]["name"], cpu, [], new_service_id)
-                    # Onboard the function and check the result
-                    if onboard(netFunc) == 1:
+                    db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
+                    # Onboard the function considering the requested slice avilability and check the result
+                    if onboard(netFunc, r['availability']) == 1:
                         sliceFailed = True
                         break
 

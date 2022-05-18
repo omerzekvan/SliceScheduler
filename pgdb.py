@@ -110,10 +110,10 @@ class DBConn:
         print(id_of_row, "Record updated successfully in Services table")
         
 
-    def insertFunction(self, type: str, cpuNeed: int, nodes: str, serviceId: int):
+    def insertFunction(self, type: str, cpuNeed: int, availability: float, nodes: str, serviceId: int):
         # columnCount = len(keyvalues)
-        postgres_insert_query = """ INSERT INTO public."Functions" (type, cpuNeed, nodes, serviceId) VALUES (%s,%s, %s, %s)"""
-        record_to_insert = (type, cpuNeed, nodes, serviceId)
+        postgres_insert_query = """ INSERT INTO public."Functions" (type, cpuNeed, availability, nodes, serviceId) VALUES (%s, %s, %s, %s, %s)"""
+        record_to_insert = (type, cpuNeed, availability, nodes, serviceId)
         print("Inserting to Functions table", record_to_insert)
         self.cursor.execute(postgres_insert_query, record_to_insert)
 
