@@ -70,12 +70,12 @@ class DBConn:
         #id_of_row = list(self.cursor.fetchone()[0])
         print("Slice activated successfully")
 
-    def insertService(self, functions: str):
+    def insertService(self, functions: str, availability: float):
         # columnCount = len(keyvalues)
 
-        postgres_insert_query = """INSERT INTO public."Services" (functions) VALUES (%s)"""
+        postgres_insert_query = """INSERT INTO public."Services" (functions, availability) VALUES (%s, %s)"""
 
-        record_to_insert = (functions,)
+        record_to_insert = (functions, availability)
         print("Inserting to Services Table", record_to_insert)
         self.cursor.execute(postgres_insert_query, record_to_insert)
         #self.cursor.execute(postgres_insert_query)
