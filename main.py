@@ -2,16 +2,29 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import ast
+
 import pgdb
 import copy
+import random
 
 
 # criteria = 0 # Network Service capacity
-criteria = 1 # Pritority of Network Slice
+criteria = 1 # Priority of Network Slice
 Re = 2
 
-functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.9}, {"name": 'SMF', "cpu": 2, "availability": 0.8}, {"name": 'UPF', "cpu": 8, "availability": 0.9}]
-servicesCatalog = [[0, 1], [2]]
+functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.6},
+                    {"name": 'AUSF', "cpu": 2, "availability": 0.8},
+                    {"name": 'NEF', "cpu": 8, "availability": 0.7},
+                    {"name": 'NRF', "cpu": 2, "availability": 0.6},
+                    {"name": 'NSSF', "cpu": 2, "availability": 0.8},
+                    {"name": 'PCF', "cpu": 8, "availability": 0.7},
+                    {"name":'SMF', "cpu": 2, "availability": 0.6},
+                    {"name": 'UDM', "cpu": 2, "availability": 0.8},
+                    {"name": 'UDR', "cpu": 2, "availability": 0.8},
+                    {"name": 'UPF', "cpu": 8, "availability": 0.7}
+                    ]
+servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]
 sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.9},
 {"services": [0, 1], "priority": 2, "availability": 0.99},
@@ -19,8 +32,47 @@ sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
 {"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.99}]
 
-originalNodeCapacities = [50, 50, 16]
-nodeCapacity = [50, 50, 16]
+def generateSliceRequests():
+    try:
+        with open("sliceRequests.txt", "w") as file:
+
+            for l in range(0,30):
+                print("L: {}".format(l))
+
+                length = random.randint(2,10)
+                vnfChain = []
+                remainingVNFs = [i for i in range(10)]
+                print(remainingVNFs)
+
+                for len in range(0,length):
+                    print("len: {}".format(len))
+                    whichVNF = random.randint(0,9-len)
+                    print("whichVNF: {}".format(whichVNF))
+
+                    indexOfVNF = remainingVNFs.pop(whichVNF)
+                    vnfChain.append(indexOfVNF)
+
+                print(vnfChain)
+                priority = random.randint(1, 2)
+
+                av = random.randint(90, 99)/100
+
+                # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
+                #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
+                print("Priority: {}".format(priority))
+                print("Av: {}".format(av))
+                #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
+                line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f}\n" % (str(vnfChain), priority, av)
+                #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
+                file.write(line)
+
+    except Exception as e:
+        print("Exception: {}".format(e))
+    return
+
+
+originalNodeCapacities = [100, 100, 100, 100, 100, 100]
+nodeCapacity = [100, 100, 100, 100, 100, 100]
 N = len(nodeCapacity)
 
 # Failure probability of a physical node
@@ -56,7 +108,8 @@ class Service:
             self.replicas = replicas
 
 class Function:
-    def __init__(self, type, cpu, availability):
+    def __init__(self, id, type, cpu, availability):
+        self.id = id
         self.type = type
         self.cpu = cpu
         self.availability = availability
@@ -128,6 +181,7 @@ def onboard(networkFunction, targetAv):
         if replicasNeeded <= i:
             print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
+            db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
             return 0
 
     print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
@@ -155,12 +209,25 @@ if __name__ == '__main__':
     #undoList = []
     #sort(Slices)
     #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
+    generateSliceRequests()
 
+    try:
+        with open("sliceRequests.txt", "r") as file_in:
+            sliceRequests = []
+            for line in file_in:
+                line = ast.literal_eval(line)
+                print(line)
+                sliceRequests.append(line)
+    except Exception as e:
+        print(e)
 
     sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+
     numberOfRequests = len(sortedSlices)
 
-    print(sortedSlices)
+    for index, sorted in enumerate(sortedSlices):
+        print("Sorted {}: {}".format(index, sorted))
+    outputs = []
 
     for control in range(0,2):
 
@@ -200,7 +267,8 @@ if __name__ == '__main__':
                                 numberOfGuests += 1
                                 # TODO: Arrange availability
                                 break
-                            elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
+                            #elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
+                            elif r['priority'] == 2 and t.replicas - 1 > t.guests:
                                 t.guests += 1
                                 foundT = True
                                 numberOfGuests += 1
@@ -209,7 +277,7 @@ if __name__ == '__main__':
                                 break
 
                      #   sortedServices = sort(Services)
-                if foundT == False:
+                if not foundT:
                     # Assign new t with capacity 5
                     t = Service(functionsList, 2, r['availability'])
                     TServices.append(t)
@@ -223,24 +291,28 @@ if __name__ == '__main__':
 
                         for u in functionsCatalog:
                             if u["name"] == functionsCatalog[f]["name"]:
-                                #type = u["name"]
+                                # type = u["name"]
                                 cpu = u["cpu"]
                                 av = u["availability"]
                                 break
 
-                        netFunc = Function(functionsCatalog[f]["name"], cpu, av)
-                        FFunctions.append(netFunc)
+                        functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
-                        # TODO: Add availability value
-                        db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
-                        # Onboard the function considering the requested slice avilability and check the result
-                        if onboard(netFunc, r['availability']) == 1:
+                        netFunc = Function(functionId, functionsCatalog[f]["name"], cpu, av)
+                        FFunctions.append(netFunc)
+                        # Onboard the function considering the requested slice availability and check the result
+                        if r['priority'] == 1:
+                            onboardingResult = onboard(netFunc, r['availability'])
+                        else:
+                            onboardingResult = onboard(netFunc, 0)
+
+                        if onboardingResult == 1:
                             sliceFailed = True
                             break
 
                         t.replicas = netFunc.replicas
 
-                    if sliceFailed == True:
+                    if sliceFailed:
                         # Remove other functions of the same service
                         db.deleteFunctions(new_service_id)
                         # Remove the service and other services of the same slice if not used
@@ -249,8 +321,12 @@ if __name__ == '__main__':
                         updateNodes()
                         break
 
-            if sliceFailed == False:
+            if not sliceFailed:
                 db.activateSlice(new_slice_id)
                 satisfiedRequests += 1
+        outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(
+            numberOfRequests, satisfiedRequests, numberOfGuests))
+        #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
 
-        print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
+    for o in outputs:
+        print(o)

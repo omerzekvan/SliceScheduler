@@ -150,6 +150,19 @@ class DBConn:
 
         return rows
 
+    def addNodesToFunc(self, functionId: int, nodes):
+        postgres_update_query = """ UPDATE public."Functions" SET nodes = %s WHERE "id" = %s """
+        record_to_update = (nodes, functionId)
+        print("Inserting to Functions table", record_to_update)
+        self.cursor.execute(postgres_update_query, record_to_update)
+
+        self.connection.commit()
+        #id_of_new_row = self.cursor.fetchone()[0]
+        count = self.cursor.rowcount
+        print(count, "Record updated successfully in Functions table")
+
+        return
+
     def deleteService(self, serviceId: int):
         # columnCount = len(keyvalues)
 
@@ -189,4 +202,6 @@ if __name__ == '__main__':
 
     db.connect()
 
-    db.insertSlice("[{}]", 0.9)
+    #db.insertSlice("[{}]", 0.9)
+
+    db.addNodesToFunc(8648, [2, 3])
