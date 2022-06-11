@@ -5,6 +5,7 @@
 import ast
 
 import pgdb
+import slice
 import copy
 import random
 
@@ -71,8 +72,8 @@ def generateSliceRequests():
     return
 
 
-originalNodeCapacities = [100, 100, 100, 100, 100, 100]
-nodeCapacity = [100, 100, 100, 100, 100, 100]
+originalNodeCapacities = sorted([100, 100, 100, 100, 100, 100], reverse=True)
+nodeCapacity = sorted([100, 100, 100, 100, 100, 100], reverse=True)
 N = len(nodeCapacity)
 
 # Failure probability of a physical node
@@ -87,39 +88,6 @@ def resetNodes():
 #    nodeCapacity = copy.deepcopy(originalNodeCapacities)
     for index, value in enumerate(originalNodeCapacities):
         nodeCapacity[index] = value
-
-class Slice:
-  def __init__(self, services, priority, availability):
-    self.services = services
-    t.priority = priority
-    self.availability = availability
-    self.active = False
-
-class Service:
-    def __init__(self, functions, capacity, availability):
-        self.functions = functions
-        self.capacity = capacity
-        self.availability = availability
-        self.active = False
-        self.replicas = 0
-        self.guests = 0
-
-        def setReplicas(self, replicas: int):
-            self.replicas = replicas
-
-class Function:
-    def __init__(self, id, type, cpu, availability):
-        self.id = id
-        self.type = type
-        self.cpu = cpu
-        self.availability = availability
-        self.nodes = []
-        self.active = False
-        self.replicas = 0
-        self.guests = 0
-
-    def setReplicas(self, replicas: int):
-        self.replicas = replicas
 
 def areListsEqual(list1, list2):
     return set(list1) == set(list2)
@@ -262,7 +230,6 @@ if __name__ == '__main__':
                             if criteria == 0 and t.capacity > 1: #t.functions == len(intSet) and t.capacity > 0:
                                 t.capacity -= 1
 
-                                uT = t.capacity
                                 foundT = True
                                 numberOfGuests += 1
                                 # TODO: Arrange availability
@@ -279,7 +246,7 @@ if __name__ == '__main__':
                      #   sortedServices = sort(Services)
                 if not foundT:
                     # Assign new t with capacity 5
-                    t = Service(functionsList, 2, r['availability'])
+                    t = slice.Service(functionsList, 2, r['availability'])
                     TServices.append(t)
 
                     new_service_id = db.insertService(functionsList, r['availability'])
@@ -298,7 +265,7 @@ if __name__ == '__main__':
 
                         functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
-                        netFunc = Function(functionId, functionsCatalog[f]["name"], cpu, av)
+                        netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, av)
                         FFunctions.append(netFunc)
                         # Onboard the function considering the requested slice availability and check the result
                         if r['priority'] == 1:
@@ -324,8 +291,18 @@ if __name__ == '__main__':
             if not sliceFailed:
                 db.activateSlice(new_slice_id)
                 satisfiedRequests += 1
-        outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(
-            numberOfRequests, satisfiedRequests, numberOfGuests))
+
+        # Calculations for Utilization
+        totalUtilization = 0
+
+        for index, c in enumerate(nodeCapacity):
+            totalUtilization += originalNodeCapacities[index] - c
+
+        #Average utilization per satisfied slice request
+        avrgUtil = totalUtilization / satisfiedRequests
+
+        outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
+            numberOfRequests, satisfiedRequests, numberOfGuests, avrgUtil))
         #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
 
     for o in outputs:
