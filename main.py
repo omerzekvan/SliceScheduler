@@ -3,27 +3,25 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import ast
-
 import pgdb
 import slice
 import copy
 import random
 
-
 # criteria = 0 # Network Service capacity
 criteria = 1 # Priority of Network Slice
 Re = 2
 
-functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.6},
-                    {"name": 'AUSF', "cpu": 2, "availability": 0.8},
-                    {"name": 'NEF', "cpu": 8, "availability": 0.7},
-                    {"name": 'NRF', "cpu": 2, "availability": 0.6},
-                    {"name": 'NSSF', "cpu": 2, "availability": 0.8},
-                    {"name": 'PCF', "cpu": 8, "availability": 0.7},
-                    {"name":'SMF', "cpu": 2, "availability": 0.6},
-                    {"name": 'UDM', "cpu": 2, "availability": 0.8},
-                    {"name": 'UDR', "cpu": 2, "availability": 0.8},
-                    {"name": 'UPF', "cpu": 8, "availability": 0.7}
+functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.6, "reqCount": 0},
+                    {"name": 'AUSF', "cpu": 2, "availability": 0.8, "reqCount": 0},
+                    {"name": 'NEF', "cpu": 8, "availability": 0.7, "reqCount": 0},
+                    {"name": 'NRF', "cpu": 2, "availability": 0.6, "reqCount": 0},
+                    {"name": 'NSSF', "cpu": 2, "availability": 0.8, "reqCount": 0},
+                    {"name": 'PCF', "cpu": 8, "availability": 0.7, "reqCount": 0},
+                    {"name":'SMF', "cpu": 2, "availability": 0.6, "reqCount": 0},
+                    {"name": 'UDM', "cpu": 2, "availability": 0.8, "reqCount": 0},
+                    {"name": 'UDR', "cpu": 2, "availability": 0.8, "reqCount": 0},
+                    {"name": 'UPF', "cpu": 8, "availability": 0.7, "reqCount": 0}
                     ]
 servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]
 sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
@@ -32,6 +30,13 @@ sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
 {"services": [0, 1], "priority": 2, "availability": 0.9},
 {"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.99}]
+
+originalNodeCapacities = sorted([100, 100, 100, 100, 100, 100], reverse=True)
+nodeCapacity = sorted([100, 100, 100, 100, 100, 100], reverse=True)
+N = len(nodeCapacity)
+
+# Failure probability of a physical node
+hN = 0.001
 
 def generateSliceRequests():
     try:
@@ -71,21 +76,21 @@ def generateSliceRequests():
         print("Exception: {}".format(e))
     return
 
+def countCNFRequests(sliceRequests=[]):
 
-originalNodeCapacities = sorted([100, 100, 100, 100, 100, 100], reverse=True)
-nodeCapacity = sorted([100, 100, 100, 100, 100, 100], reverse=True)
-N = len(nodeCapacity)
+    for l in sliceRequests:
+        for s in l["services"]:
+            functionsCatalog[s]["reqCount"] += 1
 
-# Failure probability of a physical node
-hN = 0.001
+def rateSlices():
+    for l in sliceRequests:
+        prior = 10 if l["priority"] else 2
+        l["points"] = 10**6 * prior
+        for s in l["services"]:
+            l["points"] += functionsCatalog[s]["reqCount"] + 10**3 * functionsCatalog[s]["cpu"]
 
 # Make nodes with zero load
 def resetNodes():
-#    for n, o in zip(nodeCapacity, originalNodeCapacities):
-#        n = o
-
-#    nodeCapacity = originalNodeCapacities[:]
-#    nodeCapacity = copy.deepcopy(originalNodeCapacities)
     for index, value in enumerate(originalNodeCapacities):
         nodeCapacity[index] = value
 
@@ -164,15 +169,11 @@ def updateNodes():
         for n in nodes:
             nodeCapacity[n] -= cpuNeed
 
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
     db = pgdb.DBConn()
     db.connect()
-    #EFunctions = []
-
-    #Dts = []
 
     #undoList = []
     #sort(Slices)
@@ -189,7 +190,10 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+    countCNFRequests(sliceRequests)
+    rateSlices()
+
+    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
 
     numberOfRequests = len(sortedSlices)
 
