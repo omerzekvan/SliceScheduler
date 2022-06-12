@@ -84,8 +84,9 @@ def countCNFRequests(sliceRequests=[]):
 
 def rateSlices():
     for l in sliceRequests:
-        prior = 10 if l["priority"] else 2
-        l["points"] = 10**6 * prior
+        #prior = 10 if l["priority"] == 1 else 2
+        #l["points"] = 10**6 * prior
+        l["points"] = 10 ** 6 * l["priority"]
         for s in l["services"]:
             l["points"] += functionsCatalog[s]["reqCount"] + 10**3 * functionsCatalog[s]["cpu"]
 
