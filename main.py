@@ -173,15 +173,15 @@ def updateNodes():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    db = pgdb.DBConn()
-    db.connect()
-
-    #undoList = []
-    #sort(Slices)
-    #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
-    generateSliceRequests()
-
     try:
+        db = pgdb.DBConn()
+        db.connect()
+
+        #undoList = []
+        #sort(Slices)
+        #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
+        generateSliceRequests()
+
         with open("sliceRequests.txt", "r") as file_in:
             sliceRequests = []
             for line in file_in:
@@ -191,15 +191,8 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    countCNFRequests(sliceRequests)
-    rateSlices()
+    numberOfRequests = len(sliceRequests)
 
-    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-
-    numberOfRequests = len(sortedSlices)
-
-    for index, sorted in enumerate(sortedSlices):
-        print("Sorted {}: {}".format(index, sorted))
     outputs = []
 
     for control in range(0,2):
@@ -212,6 +205,16 @@ if __name__ == '__main__':
 
         # Delete all from Functions
         db.deleteFunctions(-1)
+
+        if control == 1:
+            countCNFRequests(sliceRequests)
+            rateSlices()
+            sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+        else:
+            sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+
+        for index, sortedSlice in enumerate(sortedSlices):
+            print("Sorted {}: {}".format(index, sortedSlice))
 
         for r in sortedSlices:
 
