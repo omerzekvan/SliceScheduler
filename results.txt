@@ -1,0 +1,10 @@
+Total Number of requests: 30 Number of satisfied requests: 9 Number of guests: 0 Average Utilization: 66.66666666666667
+Total Number of requests: 30 Number of satisfied requests: 24 Number of guests: 79 Average Utilization: 25.0
+Total Number of requests: 30 Number of satisfied requests: 12 Number of guests: 0 Average Utilization: 50.0
+Total Number of requests: 30 Number of satisfied requests: 24 Number of guests: 74 Average Utilization: 24.75
+Total Number of requests: 30 Number of satisfied requests: 7 Number of guests: 0 Average Utilization: 85.71428571428571
+Total Number of requests: 30 Number of satisfied requests: 25 Number of guests: 78 Average Utilization: 22.72
+Total Number of requests: 30 Number of satisfied requests: 11 Number of guests: 0 Average Utilization: 54.54545454545455
+Total Number of requests: 30 Number of satisfied requests: 25 Number of guests: 73 Average Utilization: 22.88
+Total Number of requests: 30 Number of satisfied requests: 11 Number of guests: 0 Average Utilization: 54.54545454545455
+Total Number of requests: 30 Number of satisfied requests: 23 Number of guests: 85 Average Utilization: 26.08695652173913
