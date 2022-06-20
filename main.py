@@ -38,11 +38,11 @@ N = len(nodeCapacity)
 # Failure probability of a physical node
 hN = 0.001
 
-def generateSliceRequests():
+def generateSliceRequests(numberOfRequests : int):
     try:
         with open("sliceRequests.txt", "w") as file:
 
-            for l in range(0,30):
+            for l in range(0,numberOfRequests):
                 print("L: {}".format(l))
 
                 length = random.randint(2,10)
@@ -180,146 +180,155 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    outputs = []
+    for numberOfReqs in range(10, 51, 10):
+        outputs = []
+        sumOfSharedUtil = 0
+        sumOfNonSharedUtil = 0
+        for experiment in range(0,5):
+            #undoList = []
+            #sort(Slices)
+            #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
+            generateSliceRequests(numberOfReqs)
 
-    for experiment in range(0,5):
-        #undoList = []
-        #sort(Slices)
-        #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
-        generateSliceRequests()
+            with open("sliceRequests.txt", "r") as file_in:
+                sliceRequests = []
+                for line in file_in:
+                    line = ast.literal_eval(line)
+                    print(line)
+                    sliceRequests.append(line)
 
-        with open("sliceRequests.txt", "r") as file_in:
-            sliceRequests = []
-            for line in file_in:
-                line = ast.literal_eval(line)
-                print(line)
-                sliceRequests.append(line)
-
-        numberOfRequests = len(sliceRequests)
+            numberOfRequests = len(sliceRequests)
 
 
 
-        for control in range(0,2):
+            for control in range(0,2):
 
-            TServices = []
-            FFunctions = []  # Really needed?
-            resetNodes()
-            satisfiedRequests = 0
-            numberOfGuests = 0
+                TServices = []
+                FFunctions = []  # Really needed?
+                resetNodes()
+                satisfiedRequests = 0
+                numberOfGuests = 0
 
-            # Delete all from Functions
-            db.deleteFunctions(-1)
+                # Delete all from Functions
+                db.deleteFunctions(-1)
 
-            if control == 1:
-                countCNFRequests(sliceRequests)
-                rateSlices()
-                sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-            else:
-                sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+                if control == 1:
+                    countCNFRequests(sliceRequests)
+                    rateSlices()
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                else:
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
 
-            for index, sortedSlice in enumerate(sortedSlices):
-                print("Sorted {}: {}".format(index, sortedSlice))
+                for index, sortedSlice in enumerate(sortedSlices):
+                    print("Sorted {}: {}".format(index, sortedSlice))
 
-            for r in sortedSlices:
+                for r in sortedSlices:
 
-                new_slice_id = db.insertSlice(r['services'], r['availability'])
+                    new_slice_id = db.insertSlice(r['services'], r['availability'])
 
-                sliceFailed = False
-                for s in r["services"]:
+                    sliceFailed = False
+                    for s in r["services"]:
 
-                    #success = False
-                    foundT = False
-                    functionsList = servicesCatalog[s]
+                        #success = False
+                        foundT = False
+                        functionsList = servicesCatalog[s]
 
-                    if control == 1:
-                        for t in TServices:
-                            tIndex = TServices.index(t)
+                        if control == 1:
+                            for t in TServices:
+                                tIndex = TServices.index(t)
 
-                            #intSet = t.functions.intersection(functionsSet)
+                                #intSet = t.functions.intersection(functionsSet)
 
-                            # If this is the service we are looking for and has enough capacity use it
-                            if set(t.functions) == set(functionsList):
-                                if criteria == 0 and t.capacity > 1: #t.functions == len(intSet) and t.capacity > 0:
-                                    t.capacity -= 1
+                                # If this is the service we are looking for and has enough capacity use it
+                                if set(t.functions) == set(functionsList):
+                                    if criteria == 0 and t.capacity > 1: #t.functions == len(intSet) and t.capacity > 0:
+                                        t.capacity -= 1
 
-                                    foundT = True
-                                    numberOfGuests += 1
-                                    # TODO: Arrange availability
+                                        foundT = True
+                                        numberOfGuests += 1
+                                        # TODO: Arrange availability
+                                        break
+                                    #elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
+                                    elif r['priority'] == 2 and t.replicas - 1 > t.guests:
+                                        t.guests += 1
+                                        foundT = True
+                                        numberOfGuests += 1
+
+                                        # TODO: Arrange availability
+                                        break
+
+                             #   sortedServices = sort(Services)
+                        if not foundT:
+                            # Assign new t with capacity 5
+                            t = slice.Service(functionsList, 2, r['availability'])
+                            TServices.append(t)
+
+                            new_service_id = db.insertService(functionsList, r['availability'])
+
+                            for f in functionsList:
+
+                                type = ""
+                                cpu = 1
+
+                                for u in functionsCatalog:
+                                    if u["name"] == functionsCatalog[f]["name"]:
+                                        # type = u["name"]
+                                        cpu = u["cpu"]
+                                        av = u["availability"]
+                                        break
+
+                                functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
+
+                                netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, av)
+                                FFunctions.append(netFunc)
+                                # Onboard the function considering the requested slice availability and check the result
+                                if r['priority'] == 1:
+                                    onboardingResult = onboard(netFunc, r['availability'])
+                                else:
+                                    onboardingResult = onboard(netFunc, 0)
+
+                                if onboardingResult == 1:
+                                    sliceFailed = True
                                     break
-                                #elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
-                                elif r['priority'] == 2 and t.replicas - 1 > t.guests:
-                                    t.guests += 1
-                                    foundT = True
-                                    numberOfGuests += 1
 
-                                    # TODO: Arrange availability
-                                    break
+                                t.replicas = netFunc.replicas
 
-                         #   sortedServices = sort(Services)
-                    if not foundT:
-                        # Assign new t with capacity 5
-                        t = slice.Service(functionsList, 2, r['availability'])
-                        TServices.append(t)
+                            if sliceFailed:
+                                # Remove other functions of the same service
+                                db.deleteFunctions(new_service_id)
+                                # Remove the service and other services of the same slice if not used
+                                db.deleteService(new_service_id)
 
-                        new_service_id = db.insertService(functionsList, r['availability'])
-
-                        for f in functionsList:
-
-                            type = ""
-                            cpu = 1
-
-                            for u in functionsCatalog:
-                                if u["name"] == functionsCatalog[f]["name"]:
-                                    # type = u["name"]
-                                    cpu = u["cpu"]
-                                    av = u["availability"]
-                                    break
-
-                            functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
-
-                            netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, av)
-                            FFunctions.append(netFunc)
-                            # Onboard the function considering the requested slice availability and check the result
-                            if r['priority'] == 1:
-                                onboardingResult = onboard(netFunc, r['availability'])
-                            else:
-                                onboardingResult = onboard(netFunc, 0)
-
-                            if onboardingResult == 1:
-                                sliceFailed = True
+                                updateNodes()
                                 break
 
-                            t.replicas = netFunc.replicas
+                    if not sliceFailed:
+                        db.activateSlice(new_slice_id)
+                        satisfiedRequests += 1
 
-                        if sliceFailed:
-                            # Remove other functions of the same service
-                            db.deleteFunctions(new_service_id)
-                            # Remove the service and other services of the same slice if not used
-                            db.deleteService(new_service_id)
+                # Calculations for Utilization
+                totalUtilization = 0
 
-                            updateNodes()
-                            break
+                for index, c in enumerate(nodeCapacity):
+                    totalUtilization += originalNodeCapacities[index] - c
 
-                if not sliceFailed:
-                    db.activateSlice(new_slice_id)
-                    satisfiedRequests += 1
+                #Average utilization per satisfied slice request
+                avrgUtil = totalUtilization / satisfiedRequests
+                if control == 0: sumOfNonSharedUtil += avrgUtil
+                else: sumOfSharedUtil+=avrgUtil
 
-            # Calculations for Utilization
-            totalUtilization = 0
+                outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
+                    numberOfRequests, satisfiedRequests, numberOfGuests, avrgUtil))
+                #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
 
-            for index, c in enumerate(nodeCapacity):
-                totalUtilization += originalNodeCapacities[index] - c
+        with open("results.txt", "a") as file1, open("avrg.txt", "a") as file2:
+            avrgNonSharedUtil = sumOfNonSharedUtil / 5
+            avrgSharedUtil = sumOfSharedUtil / 5
 
-            #Average utilization per satisfied slice request
-            avrgUtil = totalUtilization / satisfiedRequests
+            file2.write(str(avrgNonSharedUtil) + " " + str(avrgSharedUtil) + "\n")
 
-            outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
-                numberOfRequests, satisfiedRequests, numberOfGuests, avrgUtil))
-            #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
-
-    with open("results.txt", "w") as file1:
-        for o in outputs:
-            print(o)
-            # Writing data to a file
-            file1.write(o + "\n")
-            #file1.writelines(L)
+            for o in outputs:
+                print(o)
+                # Writing data to a file
+                file1.write(o + "\n")
+                #file1.writelines(L)
