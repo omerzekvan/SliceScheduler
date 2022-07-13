@@ -7,21 +7,22 @@ import pgdb
 import slice
 import copy
 import random
+import time
 
 # criteria = 0 # Network Service capacity
 criteria = 1 # Priority of Network Slice
 Re = 2
 
-functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.6, "reqCount": 0},
-                    {"name": 'AUSF', "cpu": 2, "availability": 0.8, "reqCount": 0},
-                    {"name": 'NEF', "cpu": 8, "availability": 0.7, "reqCount": 0},
-                    {"name": 'NRF', "cpu": 2, "availability": 0.6, "reqCount": 0},
-                    {"name": 'NSSF', "cpu": 2, "availability": 0.8, "reqCount": 0},
-                    {"name": 'PCF', "cpu": 8, "availability": 0.7, "reqCount": 0},
-                    {"name":'SMF', "cpu": 2, "availability": 0.6, "reqCount": 0},
-                    {"name": 'UDM', "cpu": 2, "availability": 0.8, "reqCount": 0},
-                    {"name": 'UDR', "cpu": 2, "availability": 0.8, "reqCount": 0},
-                    {"name": 'UPF', "cpu": 8, "availability": 0.7, "reqCount": 0}
+functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'AUSF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'NEF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'NRF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'NSSF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'PCF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name":'SMF', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'UDM', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'UDR', "cpu": 2, "availability": 0.9, "reqCount": 0},
+                    {"name": 'UPF', "cpu": 8, "availability": 0.9, "reqCount": 0}
                     ]
 servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]
 sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
@@ -31,8 +32,9 @@ sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
 {"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.99}]
 
-originalNodeCapacities = sorted([100, 100, 100, 100, 100, 100], reverse=True)
-nodeCapacity = sorted([100, 100, 100, 100, 100, 100], reverse=True)
+oneNodeCPU = 100
+originalNodeCapacities = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
+nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
 
 # Failure probability of a physical node
@@ -45,7 +47,8 @@ def generateSliceRequests(numberOfRequests : int):
             for l in range(0,numberOfRequests):
                 print("L: {}".format(l))
 
-                length = random.randint(2,10)
+                # Number of NFs in a network slice
+                length = random.randint(6,10)
                 vnfChain = []
                 remainingVNFs = [i for i in range(10)]
                 print(remainingVNFs)
@@ -61,7 +64,7 @@ def generateSliceRequests(numberOfRequests : int):
                 print(vnfChain)
                 priority = random.randint(1, 2)
 
-                av = random.randint(90, 99)/100
+                av = random.randint(80, 99)/100
 
                 # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
                 #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
@@ -77,6 +80,7 @@ def generateSliceRequests(numberOfRequests : int):
     return
 
 def countCNFRequests(sliceRequests=[]):
+
 
     for l in sliceRequests:
         for s in l["services"]:
@@ -147,17 +151,26 @@ def onboard(networkFunction, targetAv):
 
     i = 0
     for n in range(N):
-        if nodeCapacity[n] >= Rcpu: # Requested CPU
+        # Current capacity is enough, so onboard the NF
+        if nodeCapacity[n] >= Rcpu:
 
             networkFunction.nodes.append(n)
             nodeCapacity[n] -= Rcpu
             i += 1
 
+            networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
+
         if replicasNeeded <= i:
             print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
             db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
+
+            networkFunction.totalCPU = networkFunction.cpu * i
+            networkFunction.residualCPU = networkFunction.cpu * (i - 1)
             return 0
+
+    networkFunction.totalCPU = networkFunction.cpu * i
+    networkFunction.residualCPU = networkFunction.cpu * (i-1)
 
     print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
     return 1
@@ -174,17 +187,35 @@ def updateNodes():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
+    maxNumberOfReqs = 100
+    numberOfExperiments = 1
+
     try:
         db = pgdb.DBConn()
         db.connect()
     except Exception as e:
         print(e)
 
-    for numberOfReqs in range(10, 51, 10):
+    for numberOfReqs in range(10, maxNumberOfReqs+1 , 10):
         outputs = []
         sumOfSharedUtil = 0
         sumOfNonSharedUtil = 0
-        for experiment in range(0,5):
+        sumOfNonSSatisfiedReqs = 0
+        sumOfSSatisfiedReqs = 0
+        sumOfGuestFunctions = 0
+        sumOfGuestSlices = 0
+        sumOfProposedUtil = 0
+        sumOfPSatisfiedReqs = 0
+        sumOfPGuestFunctions = 0
+        sumOfPGuestSlices = 0
+
+        noShareTotalTime = 0
+        TSMTotalTime = 0
+        CNFSHTotalTime = 0
+
+
+
+        for experiment in range(0,numberOfExperiments):
             #undoList = []
             #sort(Slices)
             #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
@@ -201,23 +232,30 @@ if __name__ == '__main__':
 
 
 
-            for control in range(0,2):
+            for control in range(0,3):
 
                 TServices = []
                 FFunctions = []  # Really needed?
                 resetNodes()
                 satisfiedRequests = 0
-                numberOfGuests = 0
+                numberOfGuestFunctions = 0
+                numberOfGuestSlices = 0
 
                 # Delete all from Functions
                 db.deleteFunctions(-1)
 
-                if control == 1:
+                #Start Time
+                startTime = time.time()
+
+                if control == 2:
                     countCNFRequests(sliceRequests)
                     rateSlices()
                     sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                else:
+                elif control == 1:
                     sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+                else:
+                    # For the first two models there is no sorting
+                    sortedSlices = sliceRequests
 
                 for index, sortedSlice in enumerate(sortedSlices):
                     print("Sorted {}: {}".format(index, sortedSlice))
@@ -226,6 +264,7 @@ if __name__ == '__main__':
 
                     new_slice_id = db.insertSlice(r['services'], r['availability'])
 
+                    isGuest = False
                     sliceFailed = False
                     for s in r["services"]:
 
@@ -233,26 +272,30 @@ if __name__ == '__main__':
                         foundT = False
                         functionsList = servicesCatalog[s]
 
-                        if control == 1:
+                        if control > 0:
                             for t in TServices:
                                 tIndex = TServices.index(t)
 
                                 #intSet = t.functions.intersection(functionsSet)
 
                                 # If this is the service we are looking for and has enough capacity use it
-                                if set(t.functions) == set(functionsList):
-                                    if criteria == 0 and t.capacity > 1: #t.functions == len(intSet) and t.capacity > 0:
+                                if set(t.reqFunctions) == set(functionsList):
+                                    if criteria == 0 and t.capacity > 1: #t.reqFunctions == len(intSet) and t.capacity > 0:
                                         t.capacity -= 1
 
                                         foundT = True
-                                        numberOfGuests += 1
+                                        numberOfGuestFunctions += 1
+                                        isGuest = True
                                         # TODO: Arrange availability
                                         break
                                     #elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
-                                    elif r['priority'] == 2 and t.replicas - 1 > t.guests:
+                                    #elif r['priority'] == 2 and t.replicas - 1 > t.guests:
+                                    elif r['priority'] == 2 and t.fDeployments[0].residualCPU >= functionsCatalog[functionsList[0]]["cpu"]:
                                         t.guests += 1
                                         foundT = True
-                                        numberOfGuests += 1
+                                        numberOfGuestFunctions += 1
+                                        isGuest = True
+                                        t.fDeployments[0].residualCPU -= functionsCatalog[functionsList[0]]["cpu"]
 
                                         # TODO: Arrange availability
                                         break
@@ -292,12 +335,14 @@ if __name__ == '__main__':
                                     break
 
                                 t.replicas = netFunc.replicas
+                                t.fDeployments.append(netFunc)
 
                             if sliceFailed:
                                 # Remove other functions of the same service
                                 db.deleteFunctions(new_service_id)
                                 # Remove the service and other services of the same slice if not used
                                 db.deleteService(new_service_id)
+                                TServices.pop()
 
                                 updateNodes()
                                 break
@@ -305,30 +350,83 @@ if __name__ == '__main__':
                     if not sliceFailed:
                         db.activateSlice(new_slice_id)
                         satisfiedRequests += 1
+                        if isGuest: numberOfGuestSlices += 1
+
+                #End time
+                endTime = time.time()
 
                 # Calculations for Utilization
                 totalUtilization = 0
+
+                duration = endTime - startTime
 
                 for index, c in enumerate(nodeCapacity):
                     totalUtilization += originalNodeCapacities[index] - c
 
                 #Average utilization per satisfied slice request
                 avrgUtil = totalUtilization / satisfiedRequests
-                if control == 0: sumOfNonSharedUtil += avrgUtil
-                else: sumOfSharedUtil+=avrgUtil
+                if control == 0:
+                    sumOfNonSharedUtil += avrgUtil
+                    sumOfNonSSatisfiedReqs += satisfiedRequests
+                    noShareTotalTime += duration
+                elif control == 1:
+                    sumOfSharedUtil += avrgUtil
+                    sumOfSSatisfiedReqs += satisfiedRequests
+                    sumOfGuestFunctions += numberOfGuestFunctions
+                    sumOfGuestSlices += numberOfGuestSlices
+                    TSMTotalTime += duration
+                else:
+                    sumOfProposedUtil+=avrgUtil
+                    sumOfPSatisfiedReqs += satisfiedRequests
+                    sumOfPGuestFunctions += numberOfGuestFunctions
+                    sumOfPGuestSlices += numberOfGuestSlices
+                    CNFSHTotalTime += duration
 
                 outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
-                    numberOfRequests, satisfiedRequests, numberOfGuests, avrgUtil))
+                    numberOfRequests, satisfiedRequests, numberOfGuestSlices, avrgUtil))
                 #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
 
-        with open("results.txt", "a") as file1, open("avrg.txt", "a") as file2:
-            avrgNonSharedUtil = sumOfNonSharedUtil / 5
-            avrgSharedUtil = sumOfSharedUtil / 5
+        with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("guests.txt", "a") as file4, open("timeLine.txt", "a") as file5:
+            avrgNonSharedUtil = round(sumOfNonSharedUtil / numberOfExperiments, 2)
+            avrgSharedUtil = round(sumOfSharedUtil / numberOfExperiments, 2)
+            avrgProposedUtil = round(sumOfProposedUtil / numberOfExperiments, 2)
 
-            file2.write(str(avrgNonSharedUtil) + " " + str(avrgSharedUtil) + "\n")
+            avrgNonSSatisfiedReqs = round(sumOfNonSSatisfiedReqs / numberOfExperiments, 0)
+            avrgSSatisfiedReqs = round(sumOfSSatisfiedReqs / numberOfExperiments, 0)
+            avrgPSatisfiedReqs = round(sumOfPSatisfiedReqs / numberOfExperiments, 0)
+
+            avrgGuests = round(sumOfGuestSlices / numberOfExperiments, 0)
+            avrgPGuests = round(sumOfPGuestSlices / numberOfExperiments, 0)
+
+            avrgNoShareTime = round(noShareTotalTime / numberOfExperiments / numberOfReqs, 4)
+            avrgTSMTime = round(TSMTotalTime / numberOfExperiments / numberOfReqs, 4)
+            avrgCNFSHTime = round(CNFSHTotalTime / numberOfExperiments / numberOfReqs, 4)
+
+
+            usage = str(avrgNonSharedUtil) + " " + str(avrgSharedUtil) + " " + str(avrgProposedUtil) + "\n"
+            satisfied = str(avrgNonSSatisfiedReqs) + " " + str(avrgSSatisfiedReqs) + " " + str(avrgPSatisfiedReqs) + "\n"
+            guests =  str(avrgGuests)  + " " + str(avrgPGuests) + "\n"
+            timeLine = str(avrgNoShareTime) + " " + str(avrgTSMTime) + " " + str(avrgCNFSHTime) + "\n"
+
+            file2.write(usage)
+            file3.write(satisfied)
+            file4.write(guests)
+            file5.write(timeLine)
+
+
+
 
             for o in outputs:
                 print(o)
                 # Writing data to a file
                 file1.write(o + "\n")
                 #file1.writelines(L)
+
+    with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
+            "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5:
+
+        file1.write("\n")
+        file2.write("\n")
+        file3.write("\n")
+        file4.write("\n")
+        file5.write("\n")
