@@ -86,13 +86,73 @@ def countCNFRequests(sliceRequests=[]):
         for s in l["services"]:
             functionsCatalog[s]["reqCount"] += 1
 
-def rateSlices():
-    for l in sliceRequests:
-        #prior = 10 if l["priority"] == 1 else 2
-        #l["points"] = 10**6 * prior
-        l["points"] = 10 ** 6 * l["priority"]
-        for s in l["services"]:
-            l["points"] += functionsCatalog[s]["reqCount"] + 10**3 * functionsCatalog[s]["cpu"]
+def rateSlices(ratinglevel):
+    if ratinglevel == 0:
+        for l in sliceRequests:
+            #prior = 10 if l["priority"] == 1 else 2
+            #l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += 10**3 * functionsCatalog[s]["cpu"]
+    elif ratinglevel == 1:
+        for l in sliceRequests:
+            size = len(l["services"])
+            #prior = 10 if l["priority"] == 1 else 2
+            #l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] -= functionsCatalog[s]["reqCount"]/size
+    elif ratinglevel == 2:
+        for l in sliceRequests:
+            size = len(l["services"])
+            # prior = 10 if l["priority"] == 1 else 2
+            # l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += functionsCatalog[s]["reqCount"] / size
+    elif ratinglevel == 3:
+        for l in sliceRequests:
+            size = len(l["services"])
+            # prior = 10 if l["priority"] == 1 else 2
+            # l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += 10 ** 3 * functionsCatalog[s]["cpu"] + functionsCatalog[s]["reqCount"]/size
+    elif ratinglevel == 4:
+        for l in sliceRequests:
+            size = len(l["services"])
+            # prior = 10 if l["priority"] == 1 else 2
+            # l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += 10 ** 3 * functionsCatalog[s]["cpu"] - functionsCatalog[s]["reqCount"]/size
+    elif ratinglevel == 5:
+        for l in sliceRequests:
+            size = len(l["services"])
+            # prior = 10 if l["priority"] == 1 else 2
+            # l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += 10 ** 3 * functionsCatalog[s]["cpu"]
+                if l["priority"] == 1:
+                    l["points"] -= functionsCatalog[s]["reqCount"]/size
+                else:
+                #if l["priority"] == 2:
+                    l["points"] += functionsCatalog[s]["reqCount"] / size
+    elif ratinglevel == 6:
+        for l in sliceRequests:
+            size = len(l["services"])
+            # prior = 10 if l["priority"] == 1 else 2
+            # l["points"] = 10**6 * prior
+            l["points"] = 10 ** 6 * l["priority"]
+            for s in l["services"]:
+                l["points"] += 10 ** 3 * functionsCatalog[s]["cpu"]
+                if l["priority"] == 1:
+                    l["points"] += functionsCatalog[s]["reqCount"]/size
+                else:
+                #if l["priority"] == 2:
+                    l["points"] -= functionsCatalog[s]["reqCount"] / size
+
 
 # Make nodes with zero load
 def resetNodes():
@@ -187,8 +247,8 @@ def updateNodes():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 100
-    numberOfExperiments = 1
+    maxNumberOfReqs = 160
+    numberOfExperiments = 200
 
     try:
         db = pgdb.DBConn()
@@ -196,24 +256,25 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
+    controlGroups = 9
     for numberOfReqs in range(10, maxNumberOfReqs+1 , 10):
         outputs = []
-        sumOfSharedUtil = 0
-        sumOfNonSharedUtil = 0
-        sumOfNonSSatisfiedReqs = 0
-        sumOfSSatisfiedReqs = 0
-        sumOfGuestFunctions = 0
-        sumOfGuestSlices = 0
-        sumOfProposedUtil = 0
-        sumOfPSatisfiedReqs = 0
-        sumOfPGuestFunctions = 0
-        sumOfPGuestSlices = 0
 
-        noShareTotalTime = 0
-        TSMTotalTime = 0
-        CNFSHTotalTime = 0
+        sumOfUsage = [0]*controlGroups
 
+        sumOfSatisfiedReqs = [0]*controlGroups
 
+        sumOfGuestF = [0]*controlGroups
+
+        sumOfGuestS = [0]*controlGroups
+
+        totalTime = [0]*controlGroups
+
+        avrgUsage = [0]*controlGroups
+        avrgSatisfiedReqs = [0]*controlGroups
+        avrgGuestF = [0]*controlGroups
+        avrgGuestS = [0]*controlGroups
+        avrgTime = [0]*controlGroups
 
         for experiment in range(0,numberOfExperiments):
             #undoList = []
@@ -230,9 +291,7 @@ if __name__ == '__main__':
 
             numberOfRequests = len(sliceRequests)
 
-
-
-            for control in range(0,3):
+            for control in range(0,controlGroups):
 
                 TServices = []
                 FFunctions = []  # Really needed?
@@ -247,9 +306,33 @@ if __name__ == '__main__':
                 #Start Time
                 startTime = time.time()
 
-                if control == 2:
+                if control == 8:
                     countCNFRequests(sliceRequests)
-                    rateSlices()
+                    rateSlices(6)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 7:
+                    countCNFRequests(sliceRequests)
+                    rateSlices(5)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 6:
+                    countCNFRequests(sliceRequests)
+                    rateSlices(4)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 5:
+                    countCNFRequests(sliceRequests)
+                    rateSlices(3)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 4:
+                    countCNFRequests(sliceRequests)
+                    rateSlices(2)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 3:
+                    countCNFRequests(sliceRequests)
+                    rateSlices(1)
+                    sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                elif control == 2:
+                    #countCNFRequests(sliceRequests)
+                    rateSlices(0)
                     sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                 elif control == 1:
                     sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
@@ -365,56 +448,48 @@ if __name__ == '__main__':
 
                 #Average utilization per satisfied slice request
                 avrgUtil = totalUtilization / satisfiedRequests
-                if control == 0:
-                    sumOfNonSharedUtil += avrgUtil
-                    sumOfNonSSatisfiedReqs += satisfiedRequests
-                    noShareTotalTime += duration
-                elif control == 1:
-                    sumOfSharedUtil += avrgUtil
-                    sumOfSSatisfiedReqs += satisfiedRequests
-                    sumOfGuestFunctions += numberOfGuestFunctions
-                    sumOfGuestSlices += numberOfGuestSlices
-                    TSMTotalTime += duration
-                else:
-                    sumOfProposedUtil+=avrgUtil
-                    sumOfPSatisfiedReqs += satisfiedRequests
-                    sumOfPGuestFunctions += numberOfGuestFunctions
-                    sumOfPGuestSlices += numberOfGuestSlices
-                    CNFSHTotalTime += duration
+
+                sumOfUsage[control] += avrgUtil
+                sumOfSatisfiedReqs[control] += satisfiedRequests
+                sumOfGuestF[control] += numberOfGuestFunctions
+                sumOfGuestS[control] += numberOfGuestSlices
+                totalTime[control] += duration
 
                 outputs.append("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
                     numberOfRequests, satisfiedRequests, numberOfGuestSlices, avrgUtil))
                 #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfRequests, satisfiedRequests, numberOfGuests))
 
         with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("guests.txt", "a") as file4, open("timeLine.txt", "a") as file5:
-            avrgNonSharedUtil = round(sumOfNonSharedUtil / numberOfExperiments, 2)
-            avrgSharedUtil = round(sumOfSharedUtil / numberOfExperiments, 2)
-            avrgProposedUtil = round(sumOfProposedUtil / numberOfExperiments, 2)
 
-            avrgNonSSatisfiedReqs = round(sumOfNonSSatisfiedReqs / numberOfExperiments, 0)
-            avrgSSatisfiedReqs = round(sumOfSSatisfiedReqs / numberOfExperiments, 0)
-            avrgPSatisfiedReqs = round(sumOfPSatisfiedReqs / numberOfExperiments, 0)
+            usageLine = ""
+            satisfiedReqsline = ""
+            guestFLine = ""
+            guestSLine = ""
+            timeLine = ""
 
-            avrgGuests = round(sumOfGuestSlices / numberOfExperiments, 0)
-            avrgPGuests = round(sumOfPGuestSlices / numberOfExperiments, 0)
+            for c in range(0,controlGroups):
+                avrgUsage[c] = round(sumOfUsage[c] / numberOfExperiments, 2)
+                avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
+                avrgGuestF[c] = round(sumOfGuestF[c] / numberOfExperiments, 2)
+                avrgGuestS[c] = round(sumOfGuestS[c] / numberOfExperiments, 2)
+                avrgTime[c] = round(totalTime[c] / numberOfExperiments / numberOfReqs, 4)
 
-            avrgNoShareTime = round(noShareTotalTime / numberOfExperiments / numberOfReqs, 4)
-            avrgTSMTime = round(TSMTotalTime / numberOfExperiments / numberOfReqs, 4)
-            avrgCNFSHTime = round(CNFSHTotalTime / numberOfExperiments / numberOfReqs, 4)
+                usageLine += str(avrgUsage[c]) + " "
+                satisfiedReqsline += str(avrgSatisfiedReqs[c]) + " "
+                guestFLine +=  str(avrgGuestF[c])  + " "
+                guestSLine += str(avrgGuestS[c]) + " "
+                timeLine += str(avrgTime[c]) + " "
 
+            usageLine += "\n"
+            satisfiedReqsline += "\n"
+            guestFLine += "\n"
+            guestSLine += "\n"
+            timeLine += "\n"
 
-            usage = str(avrgNonSharedUtil) + " " + str(avrgSharedUtil) + " " + str(avrgProposedUtil) + "\n"
-            satisfied = str(avrgNonSSatisfiedReqs) + " " + str(avrgSSatisfiedReqs) + " " + str(avrgPSatisfiedReqs) + "\n"
-            guests =  str(avrgGuests)  + " " + str(avrgPGuests) + "\n"
-            timeLine = str(avrgNoShareTime) + " " + str(avrgTSMTime) + " " + str(avrgCNFSHTime) + "\n"
-
-            file2.write(usage)
-            file3.write(satisfied)
-            file4.write(guests)
+            file2.write(usageLine)
+            file3.write(satisfiedReqsline)
+            file4.write(guestSLine)
             file5.write(timeLine)
-
-
-
 
             for o in outputs:
                 print(o)
