@@ -3,6 +3,7 @@ import sys
 import inspect
 
 import unittest
+from unittest.mock import Mock
 from unittest.mock import patch
 
 
@@ -14,7 +15,8 @@ import slice
 class TestSlice(unittest.TestCase):
     #@patch('slice.Service')
     def test_set_replicas(self):
-        service = slice.Service(1, 2, 3)
+        mock_object = Mock()
+        service = slice.Service(mock_object, mock_object, mock_object)
         service.setReplicas(4)
 
         assert service.replicas == 4
