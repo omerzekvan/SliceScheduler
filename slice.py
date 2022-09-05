@@ -15,8 +15,8 @@ class Service:
         self.guests = 0
         self.fDeployments = []
 
-        def setReplicas(self, replicas: int):
-            self.replicas = replicas
+    def setReplicas(self, replicas: int):
+        self.replicas = replicas
 
 class Function:
     def __init__(self, id, type, cpu, availability):
