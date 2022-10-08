@@ -322,7 +322,7 @@ if __name__ == '__main__':
             file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
         controlGroups = 12
-        for numberOfReqs in range(160, maxNumberOfReqs+1 , 20):
+        for numberOfReqs in range(10, maxNumberOfReqs+1 , 20):
             outputs = []
 
             sumOfUsage = [0]*controlGroups
@@ -433,7 +433,9 @@ if __name__ == '__main__':
 
                     for r in sortedSlices:
 
-                        if totalRemainingCapacity() < 6 and (r['priority'] == 1 or (r['priority'] == 2 and totalUnderutilized < 6)):
+                        #if totalRemainingCapacity() < 6 and (r['priority'] == 1 or (r['priority'] == 2 and totalUnderutilized < 6)):
+                        #    break
+                        if totalRemainingCapacity() < 6 and totalUnderutilized < 6:
                             break
 
                         new_slice_id = db.insertSlice(r['services'], r['availability'])
