@@ -321,8 +321,8 @@ if __name__ == '__main__':
             file5.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
-        controlGroups = 12
-        for numberOfReqs in range(480, maxNumberOfReqs+1 , 30):
+        controlGroups = 5 #12
+        for numberOfReqs in range(30, maxNumberOfReqs+1 , 30):
             outputs = []
 
             sumOfUsage = [0]*controlGroups
@@ -562,8 +562,9 @@ if __name__ == '__main__':
                         winners.append(control)
 
                     #If this is the best result so far among the chosen models
-                    if control == 2 or control == 9 or control == 10:
-                        #Calculating the total duration for 3 chosen models
+                    #if control == 2 or control == 9 or control == 10:
+                    if control == 3 or control == 4:
+                        #Calculating the total duration for chosen models
                         bestResultDurationAmongFavs += duration
 
                         if maxSatisfiedRequestsInExperimentAmongFavs < satisfiedRequests:
