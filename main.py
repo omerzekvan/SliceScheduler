@@ -127,7 +127,11 @@ def rateSlices(ratinglevel):
             # l["points"] = 10**6 * prior
             l["points"] = 10 ** 6 * l["priority"]
             for s in l["services"]:
-                l["points"] += (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
+                if l["priority"] == 1:
+                    l["points"] -= functionsCatalog[s]["lowReqCount"] / size
+                else:
+                    # if l["priority"] == 2:
+                    l["points"] -= functionsCatalog[s]["reqCount"] / size
     elif ratinglevel == 3:
         for l in sliceRequests:
             size = len(l["services"])
@@ -321,7 +325,7 @@ if __name__ == '__main__':
             file5.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
-        controlGroups = 5 #12
+        controlGroups = 6 #12
         for numberOfReqs in range(30, maxNumberOfReqs+1 , 30):
             outputs = []
 
