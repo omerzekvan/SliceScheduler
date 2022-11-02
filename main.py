@@ -312,7 +312,8 @@ if __name__ == '__main__':
         db.connect()
 
         with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
-                    "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6, open("satisfiedLong.txt", "a") as file7:
+                    "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6, open("satisfiedLong.txt", "a") as file7, open(
+                    "diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9:
 
             file1.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file2.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
@@ -320,7 +321,10 @@ if __name__ == '__main__':
             file4.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file5.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
-            file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            file7.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            file8.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+
 
         controlGroups = 5 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
@@ -345,6 +349,9 @@ if __name__ == '__main__':
             avrgTime = [0]*controlGroups
 
             satisfiedLong = [0]*controlGroups
+
+            avgRunnerUpDiff = 0
+            avgThirdDiff = 0
 
             for experiment in range(0,numberOfExperiments):
                 #undoList = []
@@ -592,13 +599,35 @@ if __name__ == '__main__':
                 sumOfGuestS[controlGroups-1] += bestResultNumberOfGuestSlicesAmongFavs
                 totalTime[controlGroups-1] += bestResultDurationAmongFavs
 
+                satisfiedLong[controlGroups-1] = maxSatisfiedRequestsInExperimentAmongFavs
+
                 for w in winners:
                     scores[w] += 1
 
                 outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
                                         controlGroups-1, numberOfReqs, maxSatisfiedRequestsInExperimentAmongFavs, bestResultNumberOfGuestSlicesAmongFavs, bestResultAvrgUtilAmongFavs))
 
-            with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6:
+
+
+                sortedSatisfiedLong = sort(satisfiedLong)
+                runnerUpDiff = sortedSatisfiedLong[controlGroups-1] - sortedSatisfiedLong[controlGroups-2]
+                thirdDiff = sortedSatisfiedLong[controlGroups-1] - sortedSatisfiedLong[controlGroups-3]
+
+                avgRunnerUpDiff += runnerUpDiff/numberOfExperiments
+                avgThirdDiff += thirdDiff/numberOfExperiments
+
+                with open("satisfiedLong.txt", "a") as file7, open("diffs.txt", "a") as file8:
+
+                    for c in range(0, controlGroups):
+                        file7.write(str(satisfiedLong[c]) + " ")
+
+                    file7.write("\n")
+
+                    file8.write(str(runnerUpDiff) + " " + str(thirdDiff) + "\n")
+
+            with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("guests.txt", "a") as file4, open(
+                    "timeLine.txt", "a") as file5, open("scores.txt", "a") as file6,  open("satisfiedLong.txt", "a") as file7,  open("diffs.txt", "a") as file8, open(
+                    "avgDiffs.txt", "a") as file9:
 
                 usageLine = ""
                 satisfiedReqsline = ""
@@ -634,6 +663,8 @@ if __name__ == '__main__':
                 file5.write(timeLine)
                 file6.write(scoreLine)
 
+                file9.write(str(avgRunnerUpDiff) + " " + str(avgThirdDiff) + "\n")
+
                 for o in outputs:
                     print(o)
                     # Writing data to a file
@@ -644,7 +675,8 @@ if __name__ == '__main__':
         print(e)
 
     with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
-            "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6:
+            "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6,  open(
+            "satisfiedLong.txt", "a") as file7,  open("diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9:
 
         file1.write("\n")
         file2.write("\n")
@@ -652,3 +684,6 @@ if __name__ == '__main__':
         file4.write("\n")
         file5.write("\n")
         file6.write("\n")
+        file7.write("\n")
+        file8.write("\n")
+        file9.write("\n")
