@@ -56,23 +56,23 @@ def generateSliceRequests(numberOfRequests : int):
         with open("sliceRequests.txt", "w") as file:
 
             for l in range(0,numberOfRequests):
-                print("L: {}".format(l))
+                #print("L: {}".format(l))
 
                 # Number of NFs in a network slice
                 length = random.randint(3,10)
                 vnfChain = []
                 remainingVNFs = [i for i in range(10)]
-                print(remainingVNFs)
+                #print(remainingVNFs)
 
                 for len in range(0,length):
-                    print("len: {}".format(len))
+                    #print("len: {}".format(len))
                     whichVNF = random.randint(0,9-len)
-                    print("whichVNF: {}".format(whichVNF))
+                    #print("whichVNF: {}".format(whichVNF))
 
                     indexOfVNF = remainingVNFs.pop(whichVNF)
                     vnfChain.append(indexOfVNF)
 
-                print(vnfChain)
+                #print(vnfChain)
                 priority = random.randint(1, 2)
 
                 #av = random.randint(80, 99)/100
@@ -82,8 +82,8 @@ def generateSliceRequests(numberOfRequests : int):
 
                 # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
                 #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
-                print("Priority: {}".format(priority))
-                print("Av: {}".format(av))
+                #print("Priority: {}".format(priority))
+                #print("Av: {}".format(av))
                 #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
                 line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f}\n" % (str(vnfChain), priority, av)
                 #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
@@ -255,7 +255,7 @@ def onboard(networkFunction, targetAv):
     replicasNeeded = computeNumberOfReplicasNeeded(functionAv, targetAv)
 
     if replicasNeeded == 0:
-        print("The number of replicas needed is too high")
+        #print("The number of replicas needed is too high")
         return 0
     # Sort N in decreasing Cn order
 
@@ -271,7 +271,7 @@ def onboard(networkFunction, targetAv):
             networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
 
         if replicasNeeded <= i:
-            print(f'{i:10d} replicas onboarded')
+            #print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
             db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
 
@@ -282,7 +282,7 @@ def onboard(networkFunction, targetAv):
     networkFunction.totalCPU = networkFunction.cpu * i
     networkFunction.residualCPU = networkFunction.cpu * (i-1)
 
-    print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
+    #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
     return 0
 
 def updateNodes():
@@ -363,7 +363,7 @@ if __name__ == '__main__':
                     sliceRequests = []
                     for line in file_in:
                         line = ast.literal_eval(line)
-                        print(line)
+                        #print(line)
                         sliceRequests.append(line)
 
                 #numberOfRequests = len(sliceRequests)
@@ -441,8 +441,8 @@ if __name__ == '__main__':
                         # For the first two models there is no sorting
                         sortedSlices = sliceRequests
 
-                    for index, sortedSlice in enumerate(sortedSlices):
-                        print("Sorted {}: {}".format(index, sortedSlice))
+                    #for index, sortedSlice in enumerate(sortedSlices):
+                     #   print("Sorted {}: {}".format(index, sortedSlice))
 
                     for r in sortedSlices:
 
@@ -666,7 +666,7 @@ if __name__ == '__main__':
                 file9.write(str(avgRunnerUpDiff) + " " + str(avgThirdDiff) + "\n")
 
                 for o in outputs:
-                    print(o)
+                    #print(o)
                     # Writing data to a file
                     file1.write(o + "\n")
                     #file1.writelines(L)
