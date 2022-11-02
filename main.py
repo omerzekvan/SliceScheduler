@@ -120,11 +120,7 @@ def rateSlices(ratinglevel):
             # l["points"] = 10**6 * prior
             l["points"] = 10 ** 6 * l["priority"]
             for s in l["services"]:
-                if l["priority"] == 1:
-                    l["points"] -= functionsCatalog[s]["lowReqCount"] / size
-                else:
-                    # if l["priority"] == 2:
-                    l["points"] -= functionsCatalog[s]["reqCount"] / size
+                l["points"] += (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
     elif ratinglevel == 2:
         for l in sliceRequests:
             #prior = 10 if l["priority"] == 1 else 2
@@ -308,15 +304,15 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 600
-    numberOfExperiments = 100
+    maxNumberOfReqs = 400
+    numberOfExperiments = 200
 
     try:
         db = pgdb.DBConn()
         db.connect()
 
         with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
-                    "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6:
+                    "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6, open("satisfiedLong.txt", "a") as file7:
 
             file1.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file2.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
@@ -324,9 +320,10 @@ if __name__ == '__main__':
             file4.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file5.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            file6.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
         controlGroups = 5 #12
-        for numberOfReqs in range(30, maxNumberOfReqs+1 , 30):
+        for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
             sumOfUsage = [0]*controlGroups
@@ -346,6 +343,8 @@ if __name__ == '__main__':
             avrgGuestF = [0]*controlGroups
             avrgGuestS = [0]*controlGroups
             avrgTime = [0]*controlGroups
+
+            satisfiedLong = [0]*controlGroups
 
             for experiment in range(0,numberOfExperiments):
                 #undoList = []
@@ -369,6 +368,9 @@ if __name__ == '__main__':
                 bestResultNumberOfGuestFunctionsAmongFavs = 0
                 bestResultNumberOfGuestSlicesAmongFavs = 0
                 bestResultDurationAmongFavs = 0
+
+                runnerUpDiff = 0
+                thirdDiff = 0
 
                 #List of best performers in the experiment
                 winners = []
@@ -557,6 +559,8 @@ if __name__ == '__main__':
                     sumOfGuestS[control] += numberOfGuestSlices
                     totalTime[control] += duration
 
+                    satisfiedLong[control] = satisfiedRequests
+
                     #If this is the best result so far
                     if maxSatisfiedRequestsInExperiment <  satisfiedRequests:
                         winners = [] # Initialize the winners list, we have a new winner candidate
@@ -567,9 +571,10 @@ if __name__ == '__main__':
 
                     #If this is the best result so far among the chosen models
                     #if control == 2 or control == 9 or control == 10:
-                    if control == 3 or control == 4:
+                    if control == 1 or control == 2 or control == 3:
                         #Calculating the total duration for chosen models
                         bestResultDurationAmongFavs += duration
+                        #totalOfFavs += satisfiedRequests
 
                         if maxSatisfiedRequestsInExperimentAmongFavs < satisfiedRequests:
                             bestResultAvrgUtilAmongFavs = avrgUtil
