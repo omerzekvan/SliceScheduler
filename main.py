@@ -610,8 +610,8 @@ if __name__ == '__main__':
 
 
                 sortedSatisfiedLong = sort(satisfiedLong)
-                runnerUpDiff = sortedSatisfiedLong[controlGroups-1] - sortedSatisfiedLong[controlGroups-2]
-                thirdDiff = sortedSatisfiedLong[controlGroups-1] - sortedSatisfiedLong[controlGroups-3]
+                runnerUpDiff = sortedSatisfiedLong[controlGroups-2] - sortedSatisfiedLong[controlGroups-3]
+                thirdDiff = sortedSatisfiedLong[controlGroups-2] - sortedSatisfiedLong[controlGroups-4]
 
                 avgRunnerUpDiff += runnerUpDiff/numberOfExperiments
                 avgThirdDiff += thirdDiff/numberOfExperiments
