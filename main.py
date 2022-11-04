@@ -305,7 +305,7 @@ def totalRemainingCapacity():
 if __name__ == '__main__':
 
     maxNumberOfReqs = 400
-    numberOfExperiments = 200
+    numberOfExperiments = 500
 
     try:
         db = pgdb.DBConn()
