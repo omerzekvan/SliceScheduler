@@ -8,15 +8,15 @@ import slice
 import copy
 import random
 import time
-import numpy as np
+#import numpy as np
 
-from psycopg2.extensions import register_adapter, AsIs
-def addapt_numpy_float64(numpy_float64):
-    return AsIs(numpy_float64)
-def addapt_numpy_int64(numpy_int64):
-    return AsIs(numpy_int64)
-register_adapter(np.float64, addapt_numpy_float64)
-register_adapter(np.int64, addapt_numpy_int64)
+from psycopg2.extensions import register_adapter#, AsIs
+#def addapt_numpy_float64(numpy_float64):
+#    return AsIs(numpy_float64)
+#def addapt_numpy_int64(numpy_int64):
+#    return AsIs(numpy_int64)
+#register_adapter(np.float64, addapt_numpy_float64)
+#register_adapter(np.int64, addapt_numpy_int64)
 
 # criteria = 0 # Network Service capacity
 criteria = 1 # Priority of Network Slice
@@ -106,22 +106,22 @@ def countCNFRequests(sliceRequests=[]):
 
 def rateSlices(ratinglevel):
     if ratinglevel == 0:
-        for l in sliceRequests:
-            size = len(l["services"])
-            #prior = 10 if l["priority"] == 1 else 2
-            #l["points"] = 10**6 * prior
-            l["points"] = 10 ** 6 * l["priority"]
-            for s in l["services"]:
-                l["points"] -= (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
-    elif ratinglevel == 1:
-        for l in sliceRequests:
-            size = len(l["services"])
-            # prior = 10 if l["priority"] == 1 else 2
-            # l["points"] = 10**6 * prior
-            l["points"] = 10 ** 6 * l["priority"]
-            for s in l["services"]:
-                l["points"] += (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
-    elif ratinglevel == 2:
+    #     for l in sliceRequests:
+    #         size = len(l["services"])
+    #         #prior = 10 if l["priority"] == 1 else 2
+    #         #l["points"] = 10**6 * prior
+    #         l["points"] = 10 ** 6 * l["priority"]
+    #         for s in l["services"]:
+    #             l["points"] -= (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
+    # elif ratinglevel == 1:
+    #     for l in sliceRequests:
+    #         size = len(l["services"])
+    #         # prior = 10 if l["priority"] == 1 else 2
+    #         # l["points"] = 10**6 * prior
+    #         l["points"] = 10 ** 6 * l["priority"]
+    #         for s in l["services"]:
+    #             l["points"] += (functionsCatalog[s]["reqCount"] + functionsCatalog[s]["lowReqCount"]) /size
+    # elif ratinglevel == 2:
         for l in sliceRequests:
             #prior = 10 if l["priority"] == 1 else 2
             #l["points"] = 10**6 * prior
@@ -326,7 +326,7 @@ if __name__ == '__main__':
             file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
 
-        controlGroups = 5 #12
+        controlGroups = 4 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
@@ -429,7 +429,7 @@ if __name__ == '__main__':
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                     elif control == 3:
                         countCNFRequests(sliceRequests)
-                        rateSlices(1)
+                        rateSlices(7)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                     elif control == 2:
                         #countCNFRequests(sliceRequests)
@@ -438,7 +438,7 @@ if __name__ == '__main__':
                     elif control == 1:
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
                     else:
-                        # For the first two models there is no sorting
+                        # For the first model there is no sorting
                         sortedSlices = sliceRequests
 
                     #for index, sortedSlice in enumerate(sortedSlices):
@@ -569,43 +569,43 @@ if __name__ == '__main__':
                     satisfiedLong[control] = satisfiedRequests
 
                     #If this is the best result so far
-                    if maxSatisfiedRequestsInExperiment <  satisfiedRequests:
-                        winners = [] # Initialize the winners list, we have a new winner candidate
-                        winners.append(control)
-                        maxSatisfiedRequestsInExperiment = satisfiedRequests
-                    elif maxSatisfiedRequestsInExperiment == satisfiedRequests:
-                        winners.append(control)
+                    # if maxSatisfiedRequestsInExperiment <  satisfiedRequests:
+                    #     winners = [] # Initialize the winners list, we have a new winner candidate
+                    #     winners.append(control)
+                    #     maxSatisfiedRequestsInExperiment = satisfiedRequests
+                    # elif maxSatisfiedRequestsInExperiment == satisfiedRequests:
+                    #     winners.append(control)
 
                     #If this is the best result so far among the chosen models
                     #if control == 2 or control == 9 or control == 10:
-                    if control == 1 or control == 2 or control == 3:
-                        #Calculating the total duration for chosen models
-                        bestResultDurationAmongFavs += duration
-                        #totalOfFavs += satisfiedRequests
-
-                        if maxSatisfiedRequestsInExperimentAmongFavs < satisfiedRequests:
-                            bestResultAvrgUtilAmongFavs = avrgUtil
-                            maxSatisfiedRequestsInExperimentAmongFavs = satisfiedRequests
-                            bestResultNumberOfGuestFunctionsAmongFavs = numberOfGuestFunctions
-                            bestResultNumberOfGuestSlicesAmongFavs = numberOfGuestSlices
+                    # if control == 1 or control == 2 or control == 3:
+                    #     #Calculating the total duration for chosen models
+                    #     bestResultDurationAmongFavs += duration
+                    #     #totalOfFavs += satisfiedRequests
+                    #
+                    #     if maxSatisfiedRequestsInExperimentAmongFavs < satisfiedRequests:
+                    #         bestResultAvrgUtilAmongFavs = avrgUtil
+                    #         maxSatisfiedRequestsInExperimentAmongFavs = satisfiedRequests
+                    #         bestResultNumberOfGuestFunctionsAmongFavs = numberOfGuestFunctions
+                    #         bestResultNumberOfGuestSlicesAmongFavs = numberOfGuestSlices
 
                     outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
                         control, numberOfReqs, satisfiedRequests, numberOfGuestSlices, avrgUtil))
                     #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfReqs, satisfiedRequests, numberOfGuests))
 
-                sumOfUsage[controlGroups-1] += bestResultAvrgUtilAmongFavs
-                sumOfSatisfiedReqs[controlGroups-1] += maxSatisfiedRequestsInExperimentAmongFavs
-                sumOfGuestF[controlGroups-1] += bestResultNumberOfGuestFunctionsAmongFavs
-                sumOfGuestS[controlGroups-1] += bestResultNumberOfGuestSlicesAmongFavs
-                totalTime[controlGroups-1] += bestResultDurationAmongFavs
+                # sumOfUsage[controlGroups-1] += bestResultAvrgUtilAmongFavs
+                # sumOfSatisfiedReqs[controlGroups-1] += maxSatisfiedRequestsInExperimentAmongFavs
+                # sumOfGuestF[controlGroups-1] += bestResultNumberOfGuestFunctionsAmongFavs
+                # sumOfGuestS[controlGroups-1] += bestResultNumberOfGuestSlicesAmongFavs
+                # totalTime[controlGroups-1] += bestResultDurationAmongFavs
 
-                satisfiedLong[controlGroups-1] = maxSatisfiedRequestsInExperimentAmongFavs
+                # satisfiedLong[controlGroups-1] = maxSatisfiedRequestsInExperimentAmongFavs
 
-                for w in winners:
-                    scores[w] += 1
+                # for w in winners:
+                #     scores[w] += 1
 
-                outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
-                                        controlGroups-1, numberOfReqs, maxSatisfiedRequestsInExperimentAmongFavs, bestResultNumberOfGuestSlicesAmongFavs, bestResultAvrgUtilAmongFavs))
+                # outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
+                #                         controlGroups-1, numberOfReqs, maxSatisfiedRequestsInExperimentAmongFavs, bestResultNumberOfGuestSlicesAmongFavs, bestResultAvrgUtilAmongFavs))
 
 
 
