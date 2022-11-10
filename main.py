@@ -383,7 +383,7 @@ if __name__ == '__main__':
                 winners = []
 
                 # 11 control sets are simulated. The 12th model choses the best among 3 favorite models
-                for control in range(0,controlGroups-1):
+                for control in range(0,controlGroups):
 
                     TServices = []
                     FFunctions = []  # Really needed?
