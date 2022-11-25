@@ -46,6 +46,7 @@ oneNodeCPU = 100
 originalNodeCapacities = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
+leastCapacityNode = True
 
 # Failure probability of a physical node
 hN = 0.001
@@ -248,7 +249,7 @@ def computeNumberOfReplicasNeeded(fAv, targetAv):
     #return 2 if targetAv > 0.9 else 1
 
 # Onboarding a function means there is not other shared function that can be used
-def onboard(networkFunction, targetAv):
+def onboard(networkFunction, targetAv, leastCapacityNode=False):
     functionAv = networkFunction.availability
     Rcpu = networkFunction.cpu
 
@@ -259,13 +260,18 @@ def onboard(networkFunction, targetAv):
         return 0
     # Sort N in decreasing Cn order
 
+    if leastCapacityNode:
+        reverseSortedNodeCapacityInCase = sorted(nodeCapacity, True)
+    else:
+        reverseSortedNodeCapacityInCase = nodeCapacity
+
     i = 0
     for n in range(N):
         # Current capacity is enough, so onboard the NF
-        if nodeCapacity[n] >= Rcpu:
+        if reverseSortedNodeCapacityInCase[n] >= Rcpu:
 
             networkFunction.nodes.append(n)
-            nodeCapacity[n] -= Rcpu
+            reverseSortedNodeCapacityInCase[n] -= Rcpu
             i += 1
 
             networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
@@ -304,7 +310,7 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 400
+    maxNumberOfReqs = 500
     numberOfExperiments = 500
 
     try:
@@ -518,9 +524,9 @@ if __name__ == '__main__':
                                     FFunctions.append(netFunc)
                                     # Onboard the function considering the requested slice availability and check the result
                                     if r['priority'] == 1:
-                                        onboardingResult = onboard(netFunc, r['availability'])
+                                        onboardingResult = onboard(netFunc, r['availability'], leastCapacityNode)
                                     else:
-                                        onboardingResult = onboard(netFunc, 0)
+                                        onboardingResult = onboard(netFunc, 0, leastCapacityNode)
 
                                     if onboardingResult == 0:
                                         sliceFailed = True
