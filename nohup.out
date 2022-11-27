@@ -1,0 +1,6 @@
+Connecting to the PostgreSQL database...
+connection to server at "172.17.0.2", port 5432 failed: No route to host
+	Is the server running on that host and accepting TCP/IP connections?
+
+Exception occured why deleting the function:  'DBConn' object has no attribute 'cursor'
+'DBConn' object has no attribute 'cursor'

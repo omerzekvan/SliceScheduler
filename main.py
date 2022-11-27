@@ -248,6 +248,14 @@ def computeNumberOfReplicasNeeded(fAv, targetAv):
     #return 3 if targetAv == 99.99 else 1
     #return 2 if targetAv > 0.9 else 1
 
+
+# Returns the index of the item with minimum value. Returns the minimum index in case of a tie.
+def findMinimum(array=[]):
+    minimum = oneNodeCPU
+    for a in array:
+        if minimum > a: minimum = a
+    return minimum
+
 # Onboarding a function means there is not other shared function that can be used
 def onboard(networkFunction, targetAv, leastCapacityNode=False):
     functionAv = networkFunction.availability
@@ -260,18 +268,21 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
         return 0
     # Sort N in decreasing Cn order
 
-    if leastCapacityNode:
-        reverseSortedNodeCapacityInCase = sorted(nodeCapacity, True)
-    else:
-        reverseSortedNodeCapacityInCase = nodeCapacity
-
     i = 0
     for n in range(N):
-        # Current capacity is enough, so onboard the NF
-        if reverseSortedNodeCapacityInCase[n] >= Rcpu:
 
-            networkFunction.nodes.append(n)
-            reverseSortedNodeCapacityInCase[n] -= Rcpu
+        if leastCapacityNode:
+            currentNodeCapacity = findMinimum(nodeCapacity)
+            ind = nodeCapacity.index(currentNodeCapacity)
+        else:
+            currentNodeCapacity = nodeCapacity[n]
+            ind = n
+
+        # Current capacity is enough, so onboard the NF
+        if currentNodeCapacity >= Rcpu:
+
+            networkFunction.nodes.append(ind)
+            nodeCapacity[ind] -= Rcpu
             i += 1
 
             networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
@@ -310,8 +321,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 500
-    numberOfExperiments = 500
+    maxNumberOfReqs = 40
+    numberOfExperiments = 5
 
     try:
         db = pgdb.DBConn()

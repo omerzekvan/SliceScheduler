@@ -1,0 +1,43 @@
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+0.0 0.0
+0.0 3.0
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+0.0 0.0
+0.0 0.4
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+0.0 0.0
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+0.0 0.0
+0.0 0.0
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+2.4 3.6000000000000005

@@ -68,3 +68,85 @@ Total Number of requests: 50 Number of satisfied requests: 5 Number of guests: 0
 Total Number of requests: 50 Number of satisfied requests: 26 Number of guests: 77 Average Utilization: 23.076923076923077
 Total Number of requests: 50 Number of satisfied requests: 7 Number of guests: 0 Average Utilization: 85.71428571428571
 Total Number of requests: 50 Number of satisfied requests: 30 Number of guests: 85 Average Utilization: 20.0
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 8 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 14 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 14 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 20 Number of guests: 10 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 17 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 23 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 25 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 25 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 19 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 19 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 19 Average Utilization: 0.0
+Control Set: 0 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 0 Average Utilization: 0.0
+Control Set: 1 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 21 Average Utilization: 0.0
+Control Set: 2 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 21 Average Utilization: 0.0
+Control Set: 3 Total Number of requests: 40 Number of satisfied requests: 40 Number of guests: 21 Average Utilization: 0.0
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+
+NFavailability = 99.9. 2 pods are onboard if HA(99.99) is required else only 1 pod is onboard
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 0 Average Utilization: 33.333333333333336
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 5 Number of guests: 2 Average Utilization: 20.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 8 Number of guests: 3 Average Utilization: 12.5
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 8 Number of guests: 3 Average Utilization: 12.5
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 4 Number of guests: 0 Average Utilization: 25.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 1 Average Utilization: 33.333333333333336
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 6 Number of guests: 1 Average Utilization: 16.666666666666668
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 6 Number of guests: 1 Average Utilization: 16.666666666666668
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 0 Average Utilization: 33.333333333333336
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 1 Average Utilization: 33.333333333333336
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 7 Number of guests: 2 Average Utilization: 14.285714285714286
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 6 Number of guests: 1 Average Utilization: 16.666666666666668
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 0 Average Utilization: 33.333333333333336
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 5 Number of guests: 2 Average Utilization: 20.0
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 6 Number of guests: 1 Average Utilization: 16.666666666666668
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 6 Number of guests: 1 Average Utilization: 16.666666666666668
+Control Set: 0 Total Number of requests: 20 Number of satisfied requests: 4 Number of guests: 0 Average Utilization: 25.0
+Control Set: 1 Total Number of requests: 20 Number of satisfied requests: 3 Number of guests: 0 Average Utilization: 33.333333333333336
+Control Set: 2 Total Number of requests: 20 Number of satisfied requests: 7 Number of guests: 2 Average Utilization: 14.285714285714286
+Control Set: 3 Total Number of requests: 20 Number of satisfied requests: 7 Number of guests: 2 Average Utilization: 14.285714285714286
