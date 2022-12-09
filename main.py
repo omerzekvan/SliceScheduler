@@ -43,10 +43,14 @@ sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.99}]
 
 oneNodeCPU = 100
-originalNodeCapacities = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
-nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
+
+originalNodeCapacities = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+#originalNodeCapacities = sorted([{"cap": oneNodeCPU, "ind": i} for i in range(6)], key="cap", reverse=True)
+#originalNodeCapacities = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
+nodeCapacity = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+#nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
-leastCapacityNode = True
+#leastCapacityNode = True
 
 # Failure probability of a physical node
 hN = 0.001
@@ -201,8 +205,12 @@ def rateSlices(ratinglevel):
 
 # Make nodes with zero load
 def resetNodes():
-    for index, value in enumerate(originalNodeCapacities):
-        nodeCapacity[index] = value
+#    for index, value in enumerate(originalNodeCapacities):
+#        nodeCapacity[index] = value
+    # nodeCapacity = []
+    global nodeCapacity
+    nodeCapacity = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+    b = 1
 
 def areListsEqual(list1, list2):
     return set(list1) == set(list2)
@@ -266,23 +274,31 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
     if replicasNeeded == 0:
         #print("The number of replicas needed is too high")
         return 0
-    # Sort N in decreasing Cn order
+    
+    if leastCapacityNode==True:
+        # Sort nodeCapacity in ascending Cn order
+        sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
+    else:
+        sortedNodeCapacity = nodeCapacity
 
     i = 0
     for n in range(N):
 
-        if leastCapacityNode:
-            currentNodeCapacity = findMinimum(nodeCapacity)
-            ind = nodeCapacity.index(currentNodeCapacity)
-        else:
-            currentNodeCapacity = nodeCapacity[n]
-            ind = n
+        #if leastCapacityNode:
+        #    currentNodeCapacity = findMinimum(nodeCapacity)
+        #    ind = nodeCapacity.index(currentNodeCapacity)
+        #else:
+        #    currentNodeCapacity = nodeCapacity[n]
+        #    ind = n
 
+        currentNodeCapacity = sortedNodeCapacity[n]["cap"]
+
+        ind = sortedNodeCapacity[n]["ind"]
         # Current capacity is enough, so onboard the NF
         if currentNodeCapacity >= Rcpu:
 
             networkFunction.nodes.append(ind)
-            nodeCapacity[ind] -= Rcpu
+            nodeCapacity[ind]["cap"] -= Rcpu
             i += 1
 
             networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
@@ -299,7 +315,10 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
     networkFunction.totalCPU = networkFunction.cpu * i
     networkFunction.residualCPU = networkFunction.cpu * (i-1)
 
-    #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
+    if i == 0:
+        zzz = 0
+
+    print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
     return 0
 
 def updateNodes():
@@ -309,20 +328,20 @@ def updateNodes():
         cpuNeed = r[1]
         nodes = r[5]
         for n in nodes:
-            nodeCapacity[n] -= cpuNeed
+            nodeCapacity[n]["cap"] -= cpuNeed
 
 def totalRemainingCapacity():
     total = 0
     for nc in nodeCapacity:
-        total += nc
+        total += nc["cap"]
 
     return total
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 40
-    numberOfExperiments = 5
+    maxNumberOfReqs = 100
+    numberOfExperiments = 1
 
     try:
         db = pgdb.DBConn()
@@ -343,7 +362,7 @@ if __name__ == '__main__':
             file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
 
-        controlGroups = 4 #12
+        controlGroups = 5 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
@@ -380,7 +399,7 @@ if __name__ == '__main__':
                     sliceRequests = []
                     for line in file_in:
                         line = ast.literal_eval(line)
-                        #print(line)
+                        print(line)
                         sliceRequests.append(line)
 
                 #numberOfRequests = len(sliceRequests)
@@ -416,47 +435,26 @@ if __name__ == '__main__':
 
                     #Start Time
                     startTime = time.time()
-                    if control == 10:
+                    if control > 4:
                         countCNFRequests(sliceRequests)
-                        rateSlices(8)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 9:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(7)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 8:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(6)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 7:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(5)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 6:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(4)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 5:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(3)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
+                        rateSlices(control-2)
+                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])                
                     elif control == 4:
                         countCNFRequests(sliceRequests)
-                        rateSlices(2)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 3:
-                        countCNFRequests(sliceRequests)
                         rateSlices(7)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 2:
+                    elif control == 3:
                         #countCNFRequests(sliceRequests)
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 1:
+                    elif control > 0:
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
                     else:
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
+
+                    leastCapacityNode = True if control == 2 else False
+
 
                     #for index, sortedSlice in enumerate(sortedSlices):
                      #   print("Sorted {}: {}".format(index, sortedSlice))
@@ -572,10 +570,12 @@ if __name__ == '__main__':
                     duration = endTime - startTime
 
                     for index, c in enumerate(nodeCapacity):
-                        totalUtilization += originalNodeCapacities[index] - c
+                        totalUtilization += originalNodeCapacities[index]["cap"] - c["cap"]
 
+                    if satisfiedRequests != 0:
                     #Average utilization per satisfied slice request
-                    avrgUtil = totalUtilization / satisfiedRequests
+                        avrgUtil = totalUtilization / satisfiedRequests
+                    else: avrgUtil = 0
 
                     sumOfUsage[control] += avrgUtil
                     sumOfSatisfiedReqs[control] += satisfiedRequests
@@ -586,12 +586,12 @@ if __name__ == '__main__':
                     satisfiedLong[control] = satisfiedRequests
 
                     #If this is the best result so far
-                    # if maxSatisfiedRequestsInExperiment <  satisfiedRequests:
-                    #     winners = [] # Initialize the winners list, we have a new winner candidate
-                    #     winners.append(control)
-                    #     maxSatisfiedRequestsInExperiment = satisfiedRequests
-                    # elif maxSatisfiedRequestsInExperiment == satisfiedRequests:
-                    #     winners.append(control)
+                    if maxSatisfiedRequestsInExperiment <  satisfiedRequests:
+                        winners = [] # Initialize the winners list, we have a new winner candidate
+                        winners.append(control)
+                        maxSatisfiedRequestsInExperiment = satisfiedRequests
+                    elif maxSatisfiedRequestsInExperiment == satisfiedRequests:
+                        winners.append(control)
 
                     #If this is the best result so far among the chosen models
                     #if control == 2 or control == 9 or control == 10:
@@ -608,7 +608,7 @@ if __name__ == '__main__':
 
                     outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
                         control, numberOfReqs, satisfiedRequests, numberOfGuestSlices, avrgUtil))
-                    #print("Total Number of requests: {} Number of satisfied requests: {} Number of guests: {}".format(numberOfReqs, satisfiedRequests, numberOfGuests))
+                    print("Total Number of requests: {} Number of satisfied requests: {}".format(numberOfReqs, satisfiedRequests))
 
                 # sumOfUsage[controlGroups-1] += bestResultAvrgUtilAmongFavs
                 # sumOfSatisfiedReqs[controlGroups-1] += maxSatisfiedRequestsInExperimentAmongFavs
@@ -618,8 +618,8 @@ if __name__ == '__main__':
 
                 # satisfiedLong[controlGroups-1] = maxSatisfiedRequestsInExperimentAmongFavs
 
-                # for w in winners:
-                #     scores[w] += 1
+                for w in winners:
+                    scores[w] += 1
 
                 # outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
                 #                         controlGroups-1, numberOfReqs, maxSatisfiedRequestsInExperimentAmongFavs, bestResultNumberOfGuestSlicesAmongFavs, bestResultAvrgUtilAmongFavs))
@@ -683,7 +683,7 @@ if __name__ == '__main__':
                 file9.write(str(avgRunnerUpDiff) + " " + str(avgThirdDiff) + "\n")
 
                 for o in outputs:
-                    #print(o)
+                    print(o)
                     # Writing data to a file
                     file1.write(o + "\n")
                     #file1.writelines(L)
