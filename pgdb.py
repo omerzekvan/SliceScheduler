@@ -199,6 +199,36 @@ class DBConn:
 
         #return id_of_new_row
 
+    def deleteServices(self):
+        # columnCount = len(keyvalues)
+        try:
+            postgres_delete_query = """ DELETE FROM public.\"Services\""""
+            self.cursor.execute(postgres_delete_query)
+
+            self.connection.commit()
+            #id_of_new_row = self.cursor.fetchone()[0]
+            count = self.cursor.rowcount
+            #print(count, "Record deleted successfully from Functions table")
+        except BaseException as Err:
+            print("Exception occured why deleting services: ", Err)
+
+        #return id_of_new_row
+
+    def deleteSlices(self):
+        # columnCount = len(keyvalues)
+        try:
+            postgres_delete_query = """ DELETE FROM public.\"Slices\""""
+            self.cursor.execute(postgres_delete_query)
+
+            self.connection.commit()
+            #id_of_new_row = self.cursor.fetchone()[0]
+            count = self.cursor.rowcount
+            #print(count, "Record deleted successfully from Functions table")
+        except BaseException as Err:
+            print("Exception occured why deleting slices: ", Err)
+
+        #return id_of_new_row
+
 if __name__ == '__main__':
     db = DBConn()
 

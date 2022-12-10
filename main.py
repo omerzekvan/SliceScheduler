@@ -362,7 +362,7 @@ if __name__ == '__main__':
             file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
 
 
-        controlGroups = 5 #12
+        controlGroups = 6 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
@@ -431,14 +431,16 @@ if __name__ == '__main__':
                     # Delete all from Functions
                     db.deleteFunctions(-1)
 
+                    db.deleteServices()
+                    db.deleteSlices()
+
                     totalUnderutilized = 0
 
                     #Start Time
                     startTime = time.time()
                     if control > 4:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(control-2)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])                
+                        rateSlices(0)
+                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                     elif control == 4:
                         countCNFRequests(sliceRequests)
                         rateSlices(7)
@@ -453,7 +455,7 @@ if __name__ == '__main__':
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
 
-                    leastCapacityNode = True if control == 2 else False
+                    leastCapacityNode = True if control == 2 or control == 5 else False
 
 
                     #for index, sortedSlice in enumerate(sortedSlices):
