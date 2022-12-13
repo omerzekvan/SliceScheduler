@@ -8,6 +8,8 @@ import slice
 import copy
 import random
 import time
+import concurrent.futures
+import dill as pickle
 #import numpy as np
 
 from psycopg2.extensions import register_adapter#, AsIs
@@ -351,6 +353,7 @@ if __name__ == '__main__':
                     "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6, open("satisfiedLong.txt", "a") as file7, open(
                     "diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9:
 
+            #with concurrent.futures.ProcessPoolExecutor() as executor:
             file1.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file2.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file3.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
@@ -360,22 +363,36 @@ if __name__ == '__main__':
             file7.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file8.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            #     strng = "NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv)
+            #     p1 = executor.submit(file1.write, "HAslkdfm")
+            #     p2 = executor.submit(file2.write, strng)
+            #     p3 = executor.submit(file3.write, str)
+            #     p4 = executor.submit(file4.write, str)
+            #     p5 = executor.submit(file5.write, str)
+            #     p6 = executor.submit(file6.write, str)
+            #     p7 = executor.submit(file7.write, str)
+            #     p8 = executor.submit(file8.write, str)
+            #     p9 = executor.submit(file9.write, str)
+            #
+            #     p1.result()
+            #     p2.result()
+            #     p3.result()
+            #     p4.result()
+            #     p5.result()
+            #     p6.result()
+            #     p7.result()
+            #     p8.result()
+            #     p9.result()
 
-
-        controlGroups = 6 #12
+        controlGroups = 5 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
             sumOfUsage = [0]*controlGroups
-
             sumOfSatisfiedReqs = [0]*controlGroups
-
             sumOfGuestF = [0]*controlGroups
-
             sumOfGuestS = [0]*controlGroups
-
             totalTime = [0]*controlGroups
-
             scores = [0]*controlGroups
 
             avrgUsage = [0]*controlGroups
@@ -438,12 +455,8 @@ if __name__ == '__main__':
 
                     #Start Time
                     startTime = time.time()
-                    if control > 4:
+                    if control == 4:
                         rateSlices(0)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 4:
-                        countCNFRequests(sliceRequests)
-                        rateSlices(7)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                     elif control == 3:
                         #countCNFRequests(sliceRequests)
@@ -455,7 +468,7 @@ if __name__ == '__main__':
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
 
-                    leastCapacityNode = True if control == 2 or control == 5 else False
+                    leastCapacityNode = True if control == 2 or control == 4 else False
 
 
                     #for index, sortedSlice in enumerate(sortedSlices):
@@ -465,6 +478,8 @@ if __name__ == '__main__':
 
                         #if totalRemainingCapacity() < 6 and (r['priority'] == 1 or (r['priority'] == 2 and totalUnderutilized < 6)):
                         #    break
+
+                        # Break condition inserted not to lose time to find space if there is no hope
                         if totalRemainingCapacity() < 6 and totalUnderutilized < 6:
                             break
 
