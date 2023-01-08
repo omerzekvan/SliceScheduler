@@ -9,7 +9,6 @@ import copy
 import random
 import time
 import concurrent.futures
-import dill as pickle
 #import numpy as np
 
 from psycopg2.extensions import register_adapter#, AsIs
@@ -44,12 +43,12 @@ sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
 {"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.99}]
 
-oneNodeCPU = 100
+oneNodeCPU = 60
 
-originalNodeCapacities = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+originalNodeCapacities = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
 #originalNodeCapacities = sorted([{"cap": oneNodeCPU, "ind": i} for i in range(6)], key="cap", reverse=True)
 #originalNodeCapacities = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
-nodeCapacity = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
 #nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
 #leastCapacityNode = True
@@ -211,7 +210,7 @@ def resetNodes():
 #        nodeCapacity[index] = value
     # nodeCapacity = []
     global nodeCapacity
-    nodeCapacity = sorted([{"cap": oneNodeCPU-2*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+    nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
     b = 1
 
 def areListsEqual(list1, list2):
@@ -342,8 +341,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 100
-    numberOfExperiments = 1
+    maxNumberOfReqs = 500
+    numberOfExperiments = 600
 
     try:
         db = pgdb.DBConn()
