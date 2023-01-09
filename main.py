@@ -111,7 +111,13 @@ def countCNFRequests(sliceRequests=[]):
 
 
 def rateSlices(ratinglevel):
-    if ratinglevel == 0:
+    if ratinglevel == -1:
+        for l in sliceRequests:
+            #prior = 10 if l["priority"] == 1 else 2
+            #l["points"] = 10**6 * prior
+            for s in l["services"]:
+                l["points"] += 10**3 * functionsCatalog[s]["cpu"]       
+    elif ratinglevel == 0:
     #     for l in sliceRequests:
     #         size = len(l["services"])
     #         #prior = 10 if l["priority"] == 1 else 2
@@ -341,8 +347,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 500
-    numberOfExperiments = 600
+    maxNumberOfReqs = 100
+    numberOfExperiments = 2
 
     try:
         db = pgdb.DBConn()
@@ -383,7 +389,7 @@ if __name__ == '__main__':
             #     p8.result()
             #     p9.result()
 
-        controlGroups = 5 #12
+        controlGroups = 6 #12
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
@@ -454,20 +460,24 @@ if __name__ == '__main__':
 
                     #Start Time
                     startTime = time.time()
-                    if control == 4:
+                    if control == 5:
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 3:
+                    elif control == 4:
                         #countCNFRequests(sliceRequests)
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control > 0:
+                    elif control > 1:
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
+                    elif control == 1:
+                        #countCNFRequests(sliceRequests)
+                        rateSlices(-1)
+                        sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
                     else:
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
 
-                    leastCapacityNode = True if control == 2 or control == 4 else False
+                    leastCapacityNode = True if control == 3 or control == 5 else False
 
 
                     #for index, sortedSlice in enumerate(sortedSlices):
@@ -494,7 +504,7 @@ if __name__ == '__main__':
                             foundT = False
                             functionsList = servicesCatalog[s]
 
-                            if control > 0 and r['priority'] == 2:
+                            if control > 1 and r['priority'] == 2:
                                 for t in TServices:
                                     # tIndex = TServices.index(t)
 
