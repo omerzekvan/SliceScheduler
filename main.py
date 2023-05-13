@@ -523,9 +523,12 @@ if __name__ == '__main__':
                                         #elif r['priority'] == 2 and r['availability'] < t.availability and t.replicas-1 > t.guests:
                                         #elif r['priority'] == 2 and t.replicas - 1 > t.guests:
                                         #elif r['priority'] == 2 and t.fDeployments[0].residualCPU >= functionsCatalog[functionsList[0]]["cpu"]:
+                                        
+                                        # t.fDeployments[0] the host slice
                                         elif t.fDeployments[0].residualCPU >= functionsCatalog[functionsList[0]]["cpu"]:
                                             t.guests += 1
                                             foundT = True
+                                            totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
                                             numberOfGuestFunctions += 1
                                             isGuest = True
                                             t.fDeployments[0].residualCPU -= functionsCatalog[functionsList[0]]["cpu"]
