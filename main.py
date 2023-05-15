@@ -115,6 +115,7 @@ def rateSlices(ratinglevel):
         for l in sliceRequests:
             #prior = 10 if l["priority"] == 1 else 2
             #l["points"] = 10**6 * prior
+            l["points"] = 0
             for s in l["services"]:
                 l["points"] += 10**3 * functionsCatalog[s]["cpu"]       
     elif ratinglevel == 0:
@@ -347,8 +348,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 100
-    numberOfExperiments = 2
+    maxNumberOfReqs = 500
+    numberOfExperiments = 600
 
     try:
         db = pgdb.DBConn()
