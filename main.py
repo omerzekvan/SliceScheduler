@@ -489,7 +489,7 @@ if __name__ == '__main__':
                         #    break
 
                         # Break condition inserted not to lose time to find space if there is no hope
-                        if totalRemainingCapacity() < 6 and totalUnderutilized < 6:
+                        if (control <= 1 and totalRemainingCapacity() < 6) or (control > 1 and totalRemainingCapacity() < 6 and totalUnderutilized < 6):
                             break
 
                         new_slice_id = db.insertSlice(r['services'], r['availability'])
