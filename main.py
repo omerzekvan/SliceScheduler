@@ -602,7 +602,7 @@ if __name__ == '__main__':
                     avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
                     avrgGuestF[c] = round(sumOfGuestF[c] / numberOfExperiments, 2)
                     avrgGuestS[c] = round(sumOfGuestS[c] / numberOfExperiments, 2)
-                    avrgTime[c] = round(totalTime[c] / numberOfExperiments / numberOfReqs, 4)
+                    avrgTime[c] = round(totalTime[c] / numberOfExperiments, 4) # / numberOfReqs, 4)
 
                     usageLine += str(avrgUsage[c]) + " "
                     satisfiedReqsline += str(avrgSatisfiedReqs[c]) + " "
