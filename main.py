@@ -348,8 +348,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 500
-    numberOfExperiments = 600
+    maxNumberOfReqs = 100
+    numberOfExperiments = 6
 
     try:
         db = pgdb.DBConn()
@@ -357,7 +357,7 @@ if __name__ == '__main__':
 
         with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
                     "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6, open("satisfiedLong.txt", "a") as file7, open(
-                    "diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9:
+                    "diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9, open("underutil.txt", "a") as file10:
 
             #with concurrent.futures.ProcessPoolExecutor() as executor:
             file1.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
@@ -394,18 +394,26 @@ if __name__ == '__main__':
         for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
             outputs = []
 
-            sumOfUsage = [0]*controlGroups
-            sumOfSatisfiedReqs = [0]*controlGroups
-            sumOfGuestF = [0]*controlGroups
-            sumOfGuestS = [0]*controlGroups
-            totalTime = [0]*controlGroups
-            scores = [0]*controlGroups
+            sumOfUsage = [0] * controlGroups
 
-            avrgUsage = [0]*controlGroups
-            avrgSatisfiedReqs = [0]*controlGroups
-            avrgGuestF = [0]*controlGroups
-            avrgGuestS = [0]*controlGroups
-            avrgTime = [0]*controlGroups
+            sumOfUnderUtil = [0] * controlGroups
+
+            sumOfSatisfiedReqs = [0] * controlGroups
+
+            sumOfGuestF = [0] * controlGroups
+
+            sumOfGuestS = [0] * controlGroups
+
+            totalTime = [0] * controlGroups
+
+            scores = [0] * controlGroups
+
+            avrgUsage = [0] * controlGroups
+            avrgUnderUtil = [0] * controlGroups
+            avrgSatisfiedReqs = [0] * controlGroups
+            avrgGuestF = [0] * controlGroups
+            avrgGuestS = [0] * controlGroups
+            avrgTime = [0] * controlGroups
 
             satisfiedLong = [0]*controlGroups
 
@@ -461,20 +469,20 @@ if __name__ == '__main__':
 
                     #Start Time
                     startTime = time.time()
-                    if control == 5:
+                    if control == 5: # CNFSH-RCRR
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control == 4:
+                    elif control == 4: #CNFSH-RR
                         #countCNFRequests(sliceRequests)
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    elif control > 1:
+                    elif control > 1: # MHSH and CNFSH-RC
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['priority'])
-                    elif control == 1:
+                    elif control == 1: #NoShare-RR
                         #countCNFRequests(sliceRequests)
                         rateSlices(-1)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d['points'])
-                    else:
+                    else: #NoShare
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
 
@@ -531,6 +539,7 @@ if __name__ == '__main__':
                                             foundT = True
                                             totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
                                             numberOfGuestFunctions += 1
+                                            totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
                                             isGuest = True
                                             t.fDeployments[0].residualCPU -= functionsCatalog[functionsList[0]]["cpu"]
 
@@ -607,7 +616,10 @@ if __name__ == '__main__':
                         avrgUtil = totalUtilization / satisfiedRequests
                     else: avrgUtil = 0
 
+                    underUtil = totalUnderutilized / sum(d['cap'] for d in originalNodeCapacities)
+
                     sumOfUsage[control] += avrgUtil
+                    sumOfUnderUtil[control] += underUtil
                     sumOfSatisfiedReqs[control] += satisfiedRequests
                     sumOfGuestF[control] += numberOfGuestFunctions
                     sumOfGuestS[control] += numberOfGuestSlices
@@ -674,9 +686,10 @@ if __name__ == '__main__':
 
             with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("guests.txt", "a") as file4, open(
                     "timeLine.txt", "a") as file5, open("scores.txt", "a") as file6,  open("satisfiedLong.txt", "a") as file7,  open("diffs.txt", "a") as file8, open(
-                    "avgDiffs.txt", "a") as file9:
+                    "avgDiffs.txt", "a") as file9, open("underutil.txt", "a") as file10:
 
                 usageLine = ""
+                underUtilLine = ""
                 satisfiedReqsline = ""
                 guestFLine = ""
                 guestSLine = ""
@@ -685,12 +698,14 @@ if __name__ == '__main__':
 
                 for c in range(0,controlGroups):
                     avrgUsage[c] = round(sumOfUsage[c] / numberOfExperiments, 2)
+                    avrgUnderUtil[c] = round(sumOfUnderUtil[c] / numberOfExperiments, 6)
                     avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
                     avrgGuestF[c] = round(sumOfGuestF[c] / numberOfExperiments, 2)
                     avrgGuestS[c] = round(sumOfGuestS[c] / numberOfExperiments, 2)
                     avrgTime[c] = round(totalTime[c] / numberOfExperiments, 4) # / numberOfReqs, 4)
 
                     usageLine += str(avrgUsage[c]) + " "
+                    underUtilLine += str(avrgUnderUtil[c]) + " "
                     satisfiedReqsline += str(avrgSatisfiedReqs[c]) + " "
                     guestFLine +=  str(avrgGuestF[c])  + " "
                     guestSLine += str(avrgGuestS[c]) + " "
@@ -698,6 +713,7 @@ if __name__ == '__main__':
                     scoreLine += str(scores[c]) + " "
 
                 usageLine += "\n"
+                underUtilLine += "\n"
                 satisfiedReqsline += "\n"
                 guestFLine += "\n"
                 guestSLine += "\n"
@@ -711,6 +727,7 @@ if __name__ == '__main__':
                 file6.write(scoreLine)
 
                 file9.write(str(avgRunnerUpDiff) + " " + str(avgThirdDiff) + "\n")
+                file10.write(underUtilLine)
 
                 for o in outputs:
                     print(o)
@@ -723,7 +740,7 @@ if __name__ == '__main__':
 
     with open("results.txt", "a") as file1, open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
             "guests.txt", "a") as file4, open("timeLine.txt", "a") as file5, open("scores.txt", "a") as file6,  open(
-            "satisfiedLong.txt", "a") as file7,  open("diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9:
+            "satisfiedLong.txt", "a") as file7,  open("diffs.txt", "a") as file8, open("avgDiffs.txt", "a") as file9, open("underutil.txt", "a") as file10:
 
         file1.write("\n")
         file2.write("\n")
@@ -734,3 +751,4 @@ if __name__ == '__main__':
         file7.write("\n")
         file8.write("\n")
         file9.write("\n")
+        file10.write("\n")
