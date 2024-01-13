@@ -547,7 +547,7 @@ if __name__ == '__main__':
                     sumOfSatisfiedReqs[control] += satisfiedRequests
                     totalTime[control] += duration
 
-                    outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
+                    outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Average Utilization: {}".format(
                         control, numberOfReqs, satisfiedRequests, avrgUtil))
                     # print("Total Number of requests: {} Number of satisfied requests: {}".format(numberOfReqs, satisfiedRequests))
 
