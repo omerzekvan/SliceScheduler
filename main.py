@@ -59,41 +59,45 @@ HighAv = 99.99
 
 def generateSliceRequests(numberOfRequests : int):
     try:
-        with open("sliceRequests.txt", "w") as file:
+        # with open("sliceRequests.txt", "w") as file:
 
-            for l in range(0,numberOfRequests):
-                #print("L: {}".format(l))
+        global sliceRequests
+        sliceRequests = []
 
-                # Number of NFs in a network slice
-                length = random.randint(3,10)
-                vnfChain = []
-                remainingVNFs = [i for i in range(10)]
-                #print(remainingVNFs)
+        for l in range(0,numberOfRequests):
+            #print("L: {}".format(l))
 
-                for len in range(0,length):
-                    #print("len: {}".format(len))
-                    whichVNF = random.randint(0,9-len)
-                    #print("whichVNF: {}".format(whichVNF))
+            # Number of NFs in a network slice
+            length = random.randint(3,10)
+            vnfChain = []
+            remainingVNFs = [i for i in range(10)]
+            #print(remainingVNFs)
 
-                    indexOfVNF = remainingVNFs.pop(whichVNF)
-                    vnfChain.append(indexOfVNF)
+            for len in range(0,length):
+                #print("len: {}".format(len))
+                whichVNF = random.randint(0,9-len)
+                #print("whichVNF: {}".format(whichVNF))
 
-                #print(vnfChain)
-                priority = random.randint(1, 2)
+                indexOfVNF = remainingVNFs.pop(whichVNF)
+                vnfChain.append(indexOfVNF)
 
-                #av = random.randint(80, 99)/100
+            #print(vnfChain)
+            priority = random.randint(1, 2)
 
-                #In fact av = np.float128(99.999/100) if priority == 1 else 0.9
-                av = HighAv if priority == 1 else 90
+            #av = random.randint(80, 99)/100
 
-                # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
-                #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
-                #print("Priority: {}".format(priority))
-                #print("Av: {}".format(av))
-                #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
-                line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f}\n" % (str(vnfChain), priority, av)
-                #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
-                file.write(line)
+            #In fact av = np.float128(99.999/100) if priority == 1 else 0.9
+            av = HighAv if priority == 1 else 90
+
+            # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
+            #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
+            #print("Priority: {}".format(priority))
+            #print("Av: {}".format(av))
+            #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
+            line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f}\n" % (str(vnfChain), priority, av)
+            #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
+            sliceRequests.append(ast.literal_eval(line))
+                #file.write(line)
 
     except Exception as e:
         print("Exception: {}".format(e))
@@ -426,12 +430,12 @@ if __name__ == '__main__':
                 #sortedSlices = dict(sorted(sliceRequests.items(), key=lambda item: item[1]))
                 generateSliceRequests(numberOfReqs)
 
-                with open("sliceRequests.txt", "r") as file_in:
-                    sliceRequests = []
-                    for line in file_in:
-                        line = ast.literal_eval(line)
-                        print(line)
-                        sliceRequests.append(line)
+                # with open("sliceRequests.txt", "r") as file_in:
+                #     sliceRequests = []
+                #     for line in file_in:
+                #         line = ast.literal_eval(line)
+                #         # print(line)
+                #         sliceRequests.append(line)
 
                 #numberOfRequests = len(sliceRequests)
 
