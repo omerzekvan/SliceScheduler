@@ -348,8 +348,8 @@ def totalRemainingCapacity():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    maxNumberOfReqs = 100
-    numberOfExperiments = 6
+    maxNumberOfReqs = 500
+    numberOfExperiments = 600
 
     try:
         db = pgdb.DBConn()
@@ -536,8 +536,8 @@ if __name__ == '__main__':
                                         # t.fDeployments[0] the host slice
                                         elif t.fDeployments[0].residualCPU >= functionsCatalog[functionsList[0]]["cpu"]:
                                             t.guests += 1
-                                            foundT = True
-                                            totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
+                                            foundT = True    
+                                        
                                             numberOfGuestFunctions += 1
                                             totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
                                             isGuest = True
