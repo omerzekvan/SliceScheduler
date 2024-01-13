@@ -378,19 +378,13 @@ if __name__ == '__main__':
             sumOfUsage = [0] * controlGroups
             sumOfUnderUtil = [0] * controlGroups
             sumOfSatisfiedReqs = [0] * controlGroups
-            sumOfGuestF = [0] * controlGroups
-            sumOfGuestS = [0] * controlGroups
             totalTime = [0] * controlGroups
             scores = [0] * controlGroups
 
             avrgUsage = [0] * controlGroups
             avrgUnderUtil = [0] * controlGroups
             avrgSatisfiedReqs = [0] * controlGroups
-            avrgGuestF = [0] * controlGroups
-            avrgGuestS = [0] * controlGroups
             avrgTime = [0] * controlGroups
-
-            satisfiedLong = [0]*controlGroups
 
             avgRunnerUpDiff = 0
             avgThirdDiff = 0
@@ -553,10 +547,8 @@ if __name__ == '__main__':
                     sumOfSatisfiedReqs[control] += satisfiedRequests
                     totalTime[control] += duration
 
-                    satisfiedLong[control] = satisfiedRequests
-
                     outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Number of guests: {} Average Utilization: {}".format(
-                        control, numberOfReqs, satisfiedRequests, numberOfGuestSlices, avrgUtil))
+                        control, numberOfReqs, satisfiedRequests, avrgUtil))
                     # print("Total Number of requests: {} Number of satisfied requests: {}".format(numberOfReqs, satisfiedRequests))
 
             
