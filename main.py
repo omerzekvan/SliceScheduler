@@ -33,9 +33,11 @@ functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": NFavailability, "re
                     {"name":'SMF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
                     {"name": 'UDM', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
                     {"name": 'UDR', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'UPF', "cpu": 8, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0}
+                    {"name": 'UPF', "cpu": 8, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"name": 'CU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"name": 'DU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0}
                     ]
-servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]
+servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11]]
 sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
                  {"services": [0, 1], "priority": 2, "availability": 0.9},
 {"services": [0, 1], "priority": 2, "availability": 0.99},
@@ -373,6 +375,7 @@ if __name__ == '__main__':
             file7.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file8.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             file9.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
+            file10.write("NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv))
             #     strng = "NFavailability = {}. 2 pods are onboard if HA({}) is required else only 1 pod is onboard\n".format(NFavailability, HighAv)
             #     p1 = executor.submit(file1.write, "HAslkdfm")
             #     p2 = executor.submit(file2.write, strng)
