@@ -554,7 +554,8 @@ if __name__ == '__main__':
                         avrgUtil = totalUtilization / satisfiedRequests
                     else: avrgUtil = 0
 
-                    underUtil = totalUnderutilized / sum(d['cap'] for d in originalNodeCapacities)
+                    #underUtil = totalUnderutilized / sum(d['cap'] for d in originalNodeCapacities)
+                    underUtil = totalUnderutilized / totalUtilization
 
                     sumOfUsage[control] += avrgUtil
                     sumOfUnderUtil[control] += underUtil
