@@ -339,12 +339,14 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
 
 def updateNodes():
     resetNodes()
-    rows = db.getFunctions()
-    for r in rows:
-        cpuNeed = r[1]
-        nodes = r[5]
+
+    global FFunctions 
+    #rows = db.getFunctions()
+    for r in FFunctions:
+        #cpuNeed = r[1]
+        nodes = r.nodes
         for n in nodes:
-            nodeCapacity[n]["cap"] -= cpuNeed
+            nodeCapacity[n]["cap"] -= r.cpu
 
 def deleteFunctions(serviceId):
     global FFunctions
