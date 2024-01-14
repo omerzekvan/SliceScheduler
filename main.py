@@ -59,6 +59,8 @@ N = len(nodeCapacity)
 hN = 0.001
 HighAv = 99.99
 
+FFunctions = []
+
 def generateSliceRequests(numberOfRequests : int):
     try:
         # with open("sliceRequests.txt", "w") as file:
@@ -344,6 +346,13 @@ def updateNodes():
         for n in nodes:
             nodeCapacity[n]["cap"] -= cpuNeed
 
+def deleteFunctions(serviceId):
+    global FFunctions
+    
+    for index, r in enumerate(FFunctions):
+        if (r.serivceId == serviceId)
+          del FFunctions[index]
+
 def totalRemainingCapacity():
     total = 0
     for nc in nodeCapacity:
@@ -397,15 +406,15 @@ if __name__ == '__main__':
                 for control in range(0,controlGroups):
 
                     TServices = []
-                    FFunctions = []  # Really needed?
+                    FFunctions = []
                     resetNodes()
                     satisfiedRequests = 0
 
                     # Delete all from Functions
-                    db.deleteFunctions(-1)
+                    #db.deleteFunctions(-1)
 
-                    db.deleteServices()
-                    db.deleteSlices()
+                    #db.deleteServices()
+                    #db.deleteSlices()
 
                     totalUnderutilized = 0
 
@@ -436,7 +445,7 @@ if __name__ == '__main__':
                         if (control <= 1 and totalRemainingCapacity() < 6) or (control > 1 and totalRemainingCapacity() < 6 and totalUnderutilized < 6):
                             break
 
-                        new_slice_id = db.insertSlice(r['services'], r['availability'])
+                        #new_slice_id = db.insertSlice(r['services'], r['availability'])
 
                         isGuest = False
                         sliceFailed = False
@@ -476,8 +485,9 @@ if __name__ == '__main__':
                                 # Assign new t with capacity 5
                                 t = slice.Service(functionsList, 2, r['availability'])
                                 TServices.append(t)
+                                serviceId = len(TServices)-1
 
-                                new_service_id = db.insertService(functionsList, r['availability'])
+                                #new_service_id = db.insertService(functionsList, r['availability'])
 
                                 for f in functionsList:
 
@@ -490,9 +500,9 @@ if __name__ == '__main__':
                                             av = u["availability"]
                                             break
 
-                                    functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
+                                    #functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
-                                    netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6))
+                                    netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
                                     FFunctions.append(netFunc)
                                     # Onboard the function considering the requested slice availability and check the result
                                     if r['priority'] == 1:
@@ -510,9 +520,10 @@ if __name__ == '__main__':
 
                                 if sliceFailed:
                                     # Remove other functions of the same service
-                                    db.deleteFunctions(new_service_id)
+                                    deleteFunctions(serviceId)
+                                    #db.deleteFunctions(new_service_id)
                                     # Remove the service and other services of the same slice if not used
-                                    db.deleteService(new_service_id)
+                                    #db.deleteService(new_service_id)
                                     TServices.pop()
 
                                     updateNodes()
