@@ -352,7 +352,7 @@ def deleteFunctions(serviceId):
     global FFunctions
     
     for index, r in enumerate(FFunctions):
-        if (r.hostServiceId == serviced):
+        if (r.hostServiceId == serviceId):
           del FFunctions[index]
 
 def totalRemainingCapacity():
