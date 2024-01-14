@@ -504,7 +504,8 @@ if __name__ == '__main__':
 
                                     #functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
-                                    netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
+                                    #netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
+                                    netFunc = slice.Function(1, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
                                     FFunctions.append(netFunc)
                                     # Onboard the function considering the requested slice availability and check the result
                                     if r['priority'] == 1:
