@@ -322,7 +322,7 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
         if replicasNeeded <= i:
             #print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
-            db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
+            # db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
 
             networkFunction.totalCPU = networkFunction.cpu * i
             networkFunction.residualCPU = networkFunction.cpu * (i - 1)
@@ -369,8 +369,8 @@ if __name__ == '__main__':
     numberOfExperiments = 600
 
     try:
-        db = pgdb.DBConn()
-        db.connect()
+        #db = pgdb.DBConn()
+        #db.connect()
 
         with open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("timeLine.txt", "a") as file5,  open("underutil.txt", "a") as file10:
 
@@ -532,7 +532,7 @@ if __name__ == '__main__':
                                     break
 
                         if not sliceFailed:
-                            db.activateSlice(new_slice_id)
+                            #db.activateSlice(new_slice_id)
                             satisfiedRequests += 1
                             
                             totalUnderutilized += sliceUnderutilized
