@@ -580,6 +580,11 @@ if __name__ == '__main__':
                     avrgUsage[c] = round(sumOfUsage[c] / numberOfExperiments, 2)
                     avrgUnderUtil[c] = round(sumOfUnderUtil[c] / numberOfExperiments, 6)
                     avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
+<<<<<<< HEAD
+=======
+                    avrgGuestF[c] = round(sumOfGuestF[c] / numberOfExperiments, 2)
+                    avrgGuestS[c] = round(sumOfGuestS[c] / numberOfExperiments, 2)
+>>>>>>> origin/main
                     avrgTime[c] = round(totalTime[c] / numberOfExperiments, 4) # / numberOfReqs, 4)
 
                     usageLine += str(avrgUsage[c]) + " "
