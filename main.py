@@ -3,7 +3,7 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import ast
-import pgdb
+#import pgdb
 import slice
 import copy
 import random
@@ -11,7 +11,7 @@ import time
 import concurrent.futures
 #import numpy as np
 
-from psycopg2.extensions import register_adapter#, AsIs
+#from psycopg2.extensions import register_adapter#, AsIs
 #def addapt_numpy_float64(numpy_float64):
 #    return AsIs(numpy_float64)
 #def addapt_numpy_int64(numpy_int64):
@@ -38,13 +38,14 @@ functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": NFavailability, "re
                     {"name": 'DU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0}
                     ]
 servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11]]
-sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99},
-                 {"services": [0, 1], "priority": 2, "availability": 0.9},
-{"services": [0, 1], "priority": 2, "availability": 0.99},
-{"services": [0, 1], "priority": 2, "availability": 0.9},
-{"services": [0, 1], "priority": 1, "availability": 0.99},
-                 {"services": [0, 1], "priority": 2, "availability": 0.99}]
+sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99, "bw": 0.5},
+                 {"services": [0, 1], "priority": 2, "availability": 0.9, "bw": 0.5},
+{"services": [0, 1], "priority": 2, "availability": 0.99, "bw": 0.5},
+{"services": [0, 1], "priority": 2, "availability": 0.9, "bw": 0.5},
+{"services": [0, 1], "priority": 1, "availability": 0.99, "bw": 0.5},
+                 {"services": [0, 1], "priority": 2, "availability": 0.99, "bw": 0.5}]
 
+linkCapacity = 10
 oneNodeCPU = 60
 
 originalNodeCapacities = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
@@ -54,6 +55,25 @@ nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key
 #nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
 #leastCapacityNode = True
+
+# Make nodes with zero load
+def resetNodes():
+#    for index, value in enumerate(originalNodeCapacities):
+#        nodeCapacity[index] = value
+    # nodeCapacity = []
+    #global nodeCapacity
+    #nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
+    global nodes
+    #nodes = [slice.Node(i, oneNodeCPU) for i in range(N)]
+    nodes = slice.Node.sort_by_capacity([slice.Node(i, oneNodeCPU-4*i) for i in range(N)])
+    
+    b = 1
+
+resetNodes()
+
+# Create a list of rows, where each row is filled with the same value
+originalBWMatrix = [[linkCapacity for _ in range(10)] for _ in range(10)]
+liveBWMatrix = [[linkCapacity for _ in range(10)] for _ in range(10)]
 
 # Failure probability of a physical node
 hN = 0.001
@@ -87,18 +107,21 @@ def generateSliceRequests(numberOfRequests : int):
 
             #print(vnfChain)
             priority = random.randint(1, 2)
+            bwRand = random.randint(1, 5)
 
             #av = random.randint(80, 99)/100
 
             #In fact av = np.float128(99.999/100) if priority == 1 else 0.9
             av = HighAv if priority == 1 else 90
+            bw = bwRand * 0.1
 
             # file.write("{\"services\": , \"priority\": {}, \"availability\": {}}".format( str(priority), str(av)))
             #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
             #print("Priority: {}".format(priority))
             #print("Av: {}".format(av))
+            #print("Bw: {}".format(bw))
             #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
-            line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f}\n" % (str(vnfChain), priority, av)
+            line = "{\"services\": %s , \"priority\": %d, \"availability\": %.2f, \"bandwidth\": %.1f}\n" % (str(vnfChain), priority, av, bw)
             #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
             sliceRequests.append(ast.literal_eval(line))
                 #file.write(line)
@@ -219,14 +242,7 @@ def rateSlices(ratinglevel):
                     l["points"] += functionsCatalog[s]["reqCount"] / size
 
 
-# Make nodes with zero load
-def resetNodes():
-#    for index, value in enumerate(originalNodeCapacities):
-#        nodeCapacity[index] = value
-    # nodeCapacity = []
-    global nodeCapacity
-    nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
-    b = 1
+
 
 def areListsEqual(list1, list2):
     return set(list1) == set(list2)
@@ -293,12 +309,15 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
     
     if leastCapacityNode==True:
         # Sort nodeCapacity in ascending Cn order
-        sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
-    else:
-        sortedNodeCapacity = nodeCapacity
+        #sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
+        global nodes
+        nodes = slice.Node.sort_by_remCapacity(nodes)
+
+    #else:
+    #    sortedNodeCapacity = nodeCapacity
 
     i = 0
-    for n in range(N):
+    for n in nodes:
 
         #if leastCapacityNode:
         #    currentNodeCapacity = findMinimum(nodeCapacity)
@@ -307,22 +326,23 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
         #    currentNodeCapacity = nodeCapacity[n]
         #    ind = n
 
-        currentNodeCapacity = sortedNodeCapacity[n]["cap"]
+        #currentNodeCapacity = sortedNodeCapacity[n]["cap"]
 
-        ind = sortedNodeCapacity[n]["ind"]
+        #ind = sortedNodeCapacity[n]["ind"]
         # Current capacity is enough, so onboard the NF
-        if currentNodeCapacity >= Rcpu:
-
-            networkFunction.nodes.append(ind)
-            nodeCapacity[ind]["cap"] -= Rcpu
+        #if currentNodeCapacity >= Rcpu:
+        if n.remCapacity >= Rcpu:
+            networkFunction.deployedNodes.append(n.ID)
+            #nodeCapacity[ind]["cap"] -= Rcpu
+            n.remCapacity -= Rcpu
             i += 1
 
-            networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu))
+            networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu, n.ID))
 
         if replicasNeeded <= i:
             #print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
-            # db.addNodesToFunc(networkFunction.id, networkFunction.nodes)
+            # db.addNodesToFunc(networkFunction.id, networkFunction.deployedNodes)
 
             networkFunction.totalCPU = networkFunction.cpu * i
             networkFunction.residualCPU = networkFunction.cpu * (i - 1)
@@ -334,19 +354,23 @@ def onboard(networkFunction, targetAv, leastCapacityNode=False):
     if i == 0:
         zzz = 0
 
-    print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
+    #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
     return 0
 
 def updateNodes():
+    #resetNodes()
+    #slice.Node.reset_nodes(nodes)
+    global nodes
+    #nodes = [slice.Node(i, oneNodeCPU) for i in range(N)]
     resetNodes()
 
     global FFunctions 
     #rows = db.getFunctions()
     for r in FFunctions:
         #cpuNeed = r[1]
-        nodes = r.nodes
-        for n in nodes:
-            nodeCapacity[n]["cap"] -= r.cpu
+        deployedNodes = r.deployedNodes
+        for d in deployedNodes:
+            nodes[d].remCapacity -= r.cpu
 
 def deleteFunctions(serviceId):
     global FFunctions
@@ -357,8 +381,8 @@ def deleteFunctions(serviceId):
 
 def totalRemainingCapacity():
     total = 0
-    for nc in nodeCapacity:
-        total += nc["cap"]
+    for n in nodes:
+        total += n.remCapacity
 
     return total
 
@@ -468,7 +492,7 @@ if __name__ == '__main__':
                                             t.capacity -= 1
 
                                             foundT = True
-                                            numberOfGuestFunctions += 1
+                                            #numberOfGuestFunctions += 1
                                             isGuest = True
                                             break
                                         
@@ -546,8 +570,11 @@ if __name__ == '__main__':
 
                     duration = endTime - startTime
 
-                    for index, c in enumerate(nodeCapacity):
-                        totalUtilization += originalNodeCapacities[index]["cap"] - c["cap"]
+                    #for index, c in enumerate(nodeCapacity):
+                    #    totalUtilization += originalNodeCapacities[index]["cap"] - c["cap"]
+
+                    for n in nodes:
+                        totalUtilization += n.capacity - n.remCapacity
 
                     if satisfiedRequests != 0:
                     #Average utilization per satisfied slice request
