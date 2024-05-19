@@ -19,13 +19,14 @@ class Service:
         self.replicas = replicas
 
 class Function:
-    def __init__(self, id, type, cpu, availability):
+    def __init__(self, id, type, cpu, availability, hostServiceId):
         self.id = id
         self.type = type
         self.cpu = cpu
         self.totalCPU = cpu
         self.residualCPU = cpu
         self.availability = availability
+        self.hostServiceId = hostServiceId
         self.nodes = []
         self.active = False
         self.replicas = 0

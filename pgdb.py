@@ -1,12 +1,6 @@
 import psycopg2
-import numpy as np
+#/import numpy as np
 from psycopg2.extensions import register_adapter, AsIs
-def addapt_numpy_float64(numpy_float64):
-    return AsIs(numpy_float64)
-def addapt_numpy_int64(numpy_int64):
-    return AsIs(numpy_int64)
-register_adapter(np.float64, addapt_numpy_float64)
-register_adapter(np.int64, addapt_numpy_int64)
 
 class DBConn:
     def __init__(self):
@@ -56,7 +50,7 @@ class DBConn:
         self.connection.commit()
         #id_of_new_row = self.cursor.fetchone()[0]
         count = self.cursor.rowcount
-        print(count, "Record inserted successfully into Slices table")
+        #print(count, "Record inserted successfully into Slices table")
 
         postgres_select_query = """SELECT id FROM public."Slices" ORDER BY id DESC LIMIT 1"""
 
@@ -64,7 +58,7 @@ class DBConn:
 
         self.connection.commit()
         id_of_new_row = self.cursor.fetchone()[0]
-        print('StatusMessage: ', self.cursor.statusmessage)
+        #print('StatusMessage: ', self.cursor.statusmessage)
 
         return id_of_new_row
 
@@ -76,7 +70,7 @@ class DBConn:
         self.connection.commit()
 
         #id_of_row = list(self.cursor.fetchone()[0])
-        print("Slice activated successfully")
+        #print("Slice activated successfully")
 
     def insertService(self, functions: str, availability: float):
         # columnCount = len(keyvalues)
@@ -84,21 +78,21 @@ class DBConn:
         postgres_insert_query = """INSERT INTO public."Services" (functions, availability) VALUES (%s, %s)"""
 
         record_to_insert = (functions, availability)
-        print("Inserting to Services Table", record_to_insert)
+        #print("Inserting to Services Table", record_to_insert)
         self.cursor.execute(postgres_insert_query, record_to_insert)
         #self.cursor.execute(postgres_insert_query)
 
         self.connection.commit()
-        print('StatusMessage: ', self.cursor.statusmessage)
+        #print('StatusMessage: ', self.cursor.statusmessage)
 
         count = self.cursor.rowcount
-        print(count, "Record inserted successfully into Services table")
+        #print(count, "Record inserted successfully into Services table")
 
         postgres_select_query = """SELECT id FROM public."Services" ORDER BY id DESC LIMIT 1"""
         self.cursor.execute(postgres_select_query)
         self.connection.commit()
         id_of_new_row = self.cursor.fetchone()[0]
-        print('StatusMessage: ', self.cursor.statusmessage)
+        #print('StatusMessage: ', self.cursor.statusmessage)
 
         return id_of_new_row
 
@@ -115,26 +109,26 @@ class DBConn:
         self.cursor.execute(postgres_update_query, record_to_update)
         self.connection.commit()
         id_of_row = list(self.cursor.fetchone()[0])
-        print(id_of_row, "Record updated successfully in Services table")
+        #print(id_of_row, "Record updated successfully in Services table")
         
 
     def insertFunction(self, type: str, cpuNeed: int, availability, nodes: str, serviceId: int):
         # columnCount = len(keyvalues)
         postgres_insert_query = """ INSERT INTO public."Functions" (type, cpuNeed, availability, nodes, serviceId) VALUES (%s, %s, %s, %s, %s)"""
         record_to_insert = (type, cpuNeed, availability, nodes, serviceId)
-        print("Inserting to Functions table", record_to_insert)
+        #print("Inserting to Functions table", record_to_insert)
         self.cursor.execute(postgres_insert_query, record_to_insert)
 
         self.connection.commit()
         #id_of_new_row = self.cursor.fetchone()[0]
         count = self.cursor.rowcount
-        print(count, "Record inserted successfully into Functions table")
+        #print(count, "Record inserted successfully into Functions table")
 
         postgres_select_query = """SELECT id FROM public."Functions" ORDER BY id DESC LIMIT 1"""
         self.cursor.execute(postgres_select_query)
         self.connection.commit()
         id_of_new_row = self.cursor.fetchone()[0]
-        print('StatusMessage: ', self.cursor.statusmessage)
+        #print('StatusMessage: ', self.cursor.statusmessage)
 
         return id_of_new_row
 
@@ -142,32 +136,32 @@ class DBConn:
         # columnCount = len(keyvalues)
         postgres_select_query = """ SELECT * FROM public."Functions" """
         # record_to_insert = (type, cpuNeed, nodes, serviceId)
-        print("Selecting all from Functions table")
+        #print("Selecting all from Functions table")
         self.cursor.execute(postgres_select_query)
 
         self.connection.commit()
         #id_of_new_row = self.cursor.fetchone()[0]
         count = self.cursor.rowcount
-        print(count, "Record selected from Functions table")
+        #print(count, "Record selected from Functions table")
 
         #postgres_select_query = """SELECT id FROM public."Functions" ORDER BY id DESC LIMIT 1"""
         #self.cursor.execute(postgres_select_query)
         #self.connection.commit()
         rows = self.cursor.fetchall()
-        print('StatusMessage: ', self.cursor.statusmessage)
+        #print('StatusMessage: ', self.cursor.statusmessage)
 
         return rows
 
     def addNodesToFunc(self, functionId: int, nodes):
         postgres_update_query = """ UPDATE public."Functions" SET nodes = %s WHERE "id" = %s """
         record_to_update = (nodes, functionId)
-        print("Inserting to Functions table", record_to_update)
+        #print("Inserting to Functions table", record_to_update)
         self.cursor.execute(postgres_update_query, record_to_update)
 
         self.connection.commit()
         #id_of_new_row = self.cursor.fetchone()[0]
         count = self.cursor.rowcount
-        print(count, "Record updated successfully in Functions table")
+        #print(count, "Record updated successfully in Functions table")
 
         return
 
@@ -181,7 +175,7 @@ class DBConn:
         self.connection.commit()
         # id_of_new_row = self.cursor.fetchone()[0]
         count = self.cursor.rowcount
-        print(count, "Record deleted successfully from Functions table")
+        #print(count, "Record deleted successfully from Functions table")
 
         # return id_of_new_row
 
@@ -199,9 +193,39 @@ class DBConn:
             self.connection.commit()
             #id_of_new_row = self.cursor.fetchone()[0]
             count = self.cursor.rowcount
-            print(count, "Record deleted successfully from Functions table")
+            #print(count, "Record deleted successfully from Functions table")
         except BaseException as Err:
             print("Exception occured why deleting the function: ", Err)
+
+        #return id_of_new_row
+
+    def deleteServices(self):
+        # columnCount = len(keyvalues)
+        try:
+            postgres_delete_query = """ DELETE FROM public.\"Services\""""
+            self.cursor.execute(postgres_delete_query)
+
+            self.connection.commit()
+            #id_of_new_row = self.cursor.fetchone()[0]
+            count = self.cursor.rowcount
+            #print(count, "Record deleted successfully from Functions table")
+        except BaseException as Err:
+            print("Exception occured why deleting services: ", Err)
+
+        #return id_of_new_row
+
+    def deleteSlices(self):
+        # columnCount = len(keyvalues)
+        try:
+            postgres_delete_query = """ DELETE FROM public.\"Slices\""""
+            self.cursor.execute(postgres_delete_query)
+
+            self.connection.commit()
+            #id_of_new_row = self.cursor.fetchone()[0]
+            count = self.cursor.rowcount
+            #print(count, "Record deleted successfully from Functions table")
+        except BaseException as Err:
+            print("Exception occured why deleting slices: ", Err)
 
         #return id_of_new_row
 
