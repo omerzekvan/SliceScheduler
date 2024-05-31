@@ -1,19 +1,26 @@
 class Slice:
-  def __init__(self, services, priority, availability):
+  def __init__(self, id, services, priority, availability, bw=0, delay=10):
+    self.id = id
     self.services = services
-    t.priority = priority
+    self.priority = priority
     self.availability = availability
+    self.bw = bw
+    self.delay = delay
     self.active = False
+    self.points = 0
 
 class Service:
-    def __init__(self, reqFunctions, capacity, availability):
+    def __init__(self, reqFunctions, capacity, availability, bw=0, delay=10):
         self.reqFunctions = reqFunctions
         self.capacity = capacity
         self.availability = availability
+        self.bw = bw
+        self.delay = delay
         self.active = False
         self.replicas = 0
         self.guests = 0
-        self.fDeployments = []
+        self.hostedSlices = [] # Link to both the host and guest slices
+        self.fDeployments = [] # Link to the network function
 
     def setReplicas(self, replicas: int):
         self.replicas = replicas
@@ -43,7 +50,7 @@ class Pod:
         self.residualCPU = cpu
         self.active = False
         self.guests = 0
-        self.node = -1
+        self.node = node
 
 class Node:
   def __init__(self, ID, capacity):
@@ -76,7 +83,7 @@ class Node:
     return Node.sort_by_capacity(greater) + equal + Node.sort_by_capacity(less)
   
   @staticmethod
-  def sort_by_remCapacity(nodes):
+  def sort_by_remCapacity(nodes, reverse = False):
     """Sorts an array of nodes by their remCapacity using quicksort.
 
     Args:
@@ -94,8 +101,10 @@ class Node:
     equal = [node for node in nodes if node.remCapacity == pivot.remCapacity]
     greater = [node for node in nodes if node.remCapacity > pivot.remCapacity]
 
-    return Node.sort_by_remCapacity(less) + equal + Node.sort_by_remCapacity(greater)
-  
+    if reverse == False:
+      return Node.sort_by_remCapacity(less) + equal + Node.sort_by_remCapacity(greater)
+    else:
+       return Node.sort_by_remCapacity(greater) + equal + Node.sort_by_remCapacity(less)
   @staticmethod
   def reset_nodes(nodes):
     """Resets the remCapacity of each Node in the array to its capacity.
