@@ -27,18 +27,26 @@ NFavailability = 99.9 # In fact np.float128(0.999)
 global delayAware
 delayAware = False
 
-functionsCatalog = [{"name":'AMF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'AUSF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'NEF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'NRF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'NSSF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'PCF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name":'SMF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'UDM', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'UDR', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'UPF', "cpu": 8, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'CU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
-                    {"name": 'DU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0}
+global TServices
+TServices = []
+
+global totalUnderutilized
+totalUnderutilized = 0
+
+global control
+
+functionsCatalog = [{"id": 0, "name":'AMF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 1, "name": 'AUSF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 2, "name": 'NEF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 3, "name": 'NRF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 4, "name": 'NSSF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 5, "name": 'PCF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 6, "name":'SMF', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 7, "name": 'UDM', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 8, "name": 'UDR', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 9, "name": 'UPF', "cpu": 8, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 10, "name": 'CU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0},
+                    {"id": 11, "name": 'DU', "cpu": 2, "availability": NFavailability, "reqCount": 0, "lowReqCount": 0}
                     ]
 servicesCatalog = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11]]
 sliceRequests = [{"services": [0, 1], "priority": 1, "availability": 0.99, "bw": 0.5, "delay": 100},
@@ -52,7 +60,7 @@ linkCapacity = 10
 oneNodeCPU = 60
 
 # Konuşan iki pod aynı node içindeyse gecikme 0, değilse gecikme 3 ms olarak varsayıldı.
-constantDelay = 10
+constantDelay = 5
 
 originalNodeCapacities = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
 #originalNodeCapacities = sorted([{"cap": oneNodeCPU, "ind": i} for i in range(6)], key="cap", reverse=True)
@@ -307,6 +315,50 @@ def findMinimum(array=[]):
         if minimum > a: minimum = a
     return minimum
 
+# node = -1, Tüm makinelerde anlamındadır.
+def findHost(nfID, dilim, node = -1):
+
+    NF = functionsCatalog[nfID]
+    for t in TServices:
+
+        for d in t.fDeployments:
+            # If this is the service we are looking for and has enough capacity use it
+            if d.type == NF["name"]:
+                if d.residualCPU >= NF["cpu"]:
+                    
+                    if node == -1:
+                        t.hostedSlices.append(dilim.id)
+                        if delayAware == True and dilim.delay < calculateDelay(dilim):
+                            t.hostedSlices.pop()
+                            continue
+                                
+                        t.guests += 1
+                        # foundT = True    
+                    
+                        totalUnderutilized -= NF["cpu"]
+                        # isGuest = True
+                        d.residualCPU -= NF["cpu"]
+
+                        return 1 # Bu bir misafir (Guest) ve artık foundT True olmalı.
+                    else:
+                        for p in d.pods:
+                            if p.node == node:
+                                t.hostedSlices.append(dilim.id)
+                                if delayAware == True and dilim.delay < calculateDelay(dilim):
+                                    t.hostedSlices.pop()
+                                    continue
+                                    
+                                t.guests += 1
+                                # foundT = True    
+                            
+                                totalUnderutilized -= NF["cpu"]
+                                # isGuest = True
+                                d.residualCPU -= NF["cpu"]
+
+                                return 1 # Bu bir misafir (Guest) ve artık foundT True olmalı.
+
+    return 0
+
 # Onboarding a function means there is not other shared function that can be used
 # Daha sonra targetAv kaldırılabilir. Bu bilgi zaten slice içinde var.
 def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
@@ -314,6 +366,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
     Rcpu = networkFunction.cpu
     global delayFail
     delayFail = False
+    hostingResult = 0
 
     replicasNeeded = computeNumberOfReplicasNeeded(functionAv, targetAv)
 
@@ -347,9 +400,16 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
         #if currentNodeCapacity >= Rcpu:
 
         # Her iki posun da gecikme sınırı altında olacak şekilde dağıtım yapar. Eğer bu istenmiyorsa gevşetilmelidir.
-        
-        #if n.remCapacity >= Rcpu and (delayAware == False or dilim.delay > totalD): 
-        if n.remCapacity >= Rcpu:
+
+        if (control%12 == 8 or control%12 == 11) and dilim.priority == 2:
+            
+            hostingResult = findHost(networkFunction.id, dilim, n.ID)
+            #if n.remCapacity >= Rcpu and (delayAware == False or dilim.delay > totalD): 
+            if hostingResult == 1:
+                # i += 1
+                return -2
+
+        if  replicasNeeded > i and n.remCapacity >= Rcpu:
             networkFunction.deployedNodes.append(n.ID)
 
             if delayAware == True:
@@ -372,6 +432,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
 
             networkFunction.totalCPU = networkFunction.cpu * i
             networkFunction.residualCPU = networkFunction.cpu * (i - 1)
+
             return i
 
     networkFunction.totalCPU = networkFunction.cpu * i
@@ -394,6 +455,20 @@ def updateNodes():
         deployedNodes = r.deployedNodes
         for d in deployedNodes:
             nodes[d].remCapacity -= r.cpu
+
+def deleteGuests(sliceId):
+    for t in TServices:
+        for index, hosted in enumerate(t.hostedSlices):
+            if hosted == sliceId:
+                del t.hostedSlices[index]
+
+                t.guests -= 1
+                
+                totalUnderutilized += t.capacity
+
+                t.fDeployments[0].residualCPU += t.capacity
+
+    return
 
 def deleteFunctions(serviceId):
     global FFunctions
@@ -436,6 +511,8 @@ def calculateDelay(slice):
                                     source = p.node
                                     foundInTServices = True
                                     break # Gecikmenin daha da optimize edilmesi için diğer poda da bakılmalı. Burada atlanıyor.
+                                if foundInTServices == True: 
+                                    break # Burada sID barınıyorsa diğer servislere bakmaya gerek yok
                     break # Burada sID barınıyorsa diğer dilimlere bakmaya gerek yok
             if foundInTServices == True: break # Aradığımız servisi bulduk
     
@@ -541,7 +618,7 @@ if __name__ == '__main__':
                                 foundT = False
                                 functionsList = servicesCatalog[s]
 
-                                if control%3 > 0 and r.priority == 2:
+                                if (control%3 > 0  or control%12 == 8 or control%12 == 11) and r.priority == 2:
                                     for t in TServices:
 
                                         # If this is the service we are looking for and has enough capacity use it
@@ -582,8 +659,15 @@ if __name__ == '__main__':
 
                                         #functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
+
+                                        if leastCapacityNode==True:
+                                            # Sort nodeCapacity in ascending Cn order
+                                            #sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
+                                            #global nodes
+                                            nodes = slice.Node.sort_by_remCapacity(nodes)
+
                                         #netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
-                                        netFunc = slice.Function(1, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
+                                        netFunc = slice.Function(functionsCatalog[f]["id"], functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
                                         FFunctions.append(netFunc)
                                         # Onboard the function considering the requested slice availability and check the result
                                         if r.priority == 1:
@@ -592,11 +676,16 @@ if __name__ == '__main__':
                                             onboardingResult = onboard(netFunc, 0, r, leastCapacityNode)
 
                                         if onboardingResult > 0: sliceUnderutilized += (onboardingResult-1)*cpu
+                                        elif onboardingResult == -2: # Host bulundu ve misafir olundu
+                                            deleteFunctions(serviceId)
+                                            TServices.pop()
+                                            updateNodes() # Belki gerek yok
                                         else: 
                                             if onboardingResult == -1 and leastCapacityNode == True:
-                                                repeatForDelayAware = True
-                                                
+                                                repeatForDelayAware = True    
                                                 leastCapacityNode = False
+
+
                                             sliceFailed = True
                                             break
 
