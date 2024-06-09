@@ -60,7 +60,7 @@ linkCapacity = 10
 oneNodeCPU = 60
 
 # Konuşan iki pod aynı node içindeyse gecikme 0, değilse gecikme 3 ms olarak varsayıldı.
-constantDelay = 5
+constantDelay = 10
 
 originalNodeCapacities = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
 #originalNodeCapacities = sorted([{"cap": oneNodeCPU, "ind": i} for i in range(6)], key="cap", reverse=True)
