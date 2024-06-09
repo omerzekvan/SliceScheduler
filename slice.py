@@ -34,7 +34,9 @@ class Function:
         self.residualCPU = cpu
         self.availability = availability
         self.hostServiceId = hostServiceId
+
         self.deployedNodes = []
+
         self.active = False
         self.replicas = 0
         self.guests = 0
@@ -50,6 +52,7 @@ class Pod:
         self.residualCPU = cpu
         self.active = False
         self.guests = 0
+
         self.node = node
 
 class Node:
@@ -115,3 +118,4 @@ class Node:
 
     for node in nodes:
         node.remCapacity = node.capacity
+

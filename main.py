@@ -11,7 +11,9 @@ import time
 import concurrent.futures
 #import numpy as np
 
+
 #from psycopg2.extensions import register_adapter#, AsIs
+
 #def addapt_numpy_float64(numpy_float64):
 #    return AsIs(numpy_float64)
 #def addapt_numpy_int64(numpy_int64):
@@ -68,6 +70,7 @@ originalNodeCapacities = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in rang
 nodeCapacity = sorted([{"cap": oneNodeCPU-4*i, "ind": i} for i in range(6)], key=lambda item: item["cap"], reverse=True)
 #nodeCapacity = sorted([oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True) #, oneNodeCPU, oneNodeCPU, oneNodeCPU, oneNodeCPU], reverse=True)
 N = len(nodeCapacity)
+
 #global leastCapacityNode
 #leastCapacityNode = False
 
@@ -89,6 +92,7 @@ resetNodes()
 # Create a list of rows, where each row is filled with the same value
 originalBWMatrix = [[linkCapacity for _ in range(10)] for _ in range(10)]
 liveBWMatrix = [[linkCapacity for _ in range(10)] for _ in range(10)]
+
 
 # Failure probability of a physical node
 hN = 0.001
@@ -135,6 +139,7 @@ def generateSliceRequests(numberOfRequests : int):
             #line = "(\"services\": {} , \"priority\": {}, \"availability\": {})\n".format(str(vnfChain), str(priority), str(av))
             #print("Priority: {}".format(priority))
             #print("Av: {}".format(av))
+
             #print("Bw: {}".format(bw))
             #line = f"{'services': {str(vnfChain)} , 'priority': {str(priority)}, 'availability': {float(av)}}\n"
             line = "{\"id\": %d ,\"services\": %s , \"priority\": %d, \"availability\": %.2f, \"bandwidth\": %.1f}\n" % (l+1, str(vnfChain), priority, av, bw)
@@ -143,6 +148,7 @@ def generateSliceRequests(numberOfRequests : int):
             sl = slice.Slice(l+1, vnfChain, priority, av, bw, delay)
             #sliceRequests.append(ast.literal_eval(line))
             sliceRequests.append(sl)
+
                 #file.write(line)
 
     except Exception as e:
@@ -260,9 +266,6 @@ def rateSlices(ratinglevel):
                     # if l.priority == 2:
                     l.points += functionsCatalog[s]["reqCount"] / size
 
-
-
-
 def areListsEqual(list1, list2):
     return set(list1) == set(list2)
 
@@ -362,6 +365,7 @@ def findHost(nfID, dilim, node = -1):
 # Onboarding a function means there is not other shared function that can be used
 # Daha sonra targetAv kaldırılabilir. Bu bilgi zaten slice içinde var.
 def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
+
     functionAv = networkFunction.availability
     Rcpu = networkFunction.cpu
     global delayFail
@@ -376,6 +380,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
     
     if leastCapacityNode==True:
         # Sort nodeCapacity in ascending Cn order
+
         #sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
         global nodes
         nodes = slice.Node.sort_by_remCapacity(nodes)
@@ -385,6 +390,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
 
     i = 0
     for n in nodes:
+
 
         #if leastCapacityNode:
         #    currentNodeCapacity = findMinimum(nodeCapacity)
@@ -421,6 +427,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
                     continue
             #nodeCapacity[ind]["cap"] -= Rcpu
             n.remCapacity -= Rcpu
+
             i += 1
 
             networkFunction.pods.append(slice.Pod(networkFunction.type, networkFunction.cpu, n.ID))
@@ -428,7 +435,9 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
         if replicasNeeded <= i:
             #print(f'{i:10d} replicas onboarded')
             networkFunction.setReplicas(replicasNeeded)
+
             # db.addNodesToFunc(networkFunction.id, networkFunction.deployedNodes)
+
 
             networkFunction.totalCPU = networkFunction.cpu * i
             networkFunction.residualCPU = networkFunction.cpu * (i - 1)
@@ -440,6 +449,7 @@ def onboard(networkFunction, targetAv, dilim, leastCapacityNode=False):
 
     #print(f'Only {i:10d} replicas out of {replicasNeeded} are successfully onboarded')
     if delayFail == True: return -1
+
     return 0
 
 def updateNodes():
@@ -455,7 +465,7 @@ def updateNodes():
         deployedNodes = r.deployedNodes
         for d in deployedNodes:
             nodes[d].remCapacity -= r.cpu
-
+            
 def deleteGuests(sliceId):
     for t in TServices:
         for index, hosted in enumerate(t.hostedSlices):
@@ -558,7 +568,9 @@ if __name__ == '__main__':
                 generateSliceRequests(numberOfReqs)
 
                 # 6 control sets are simulated. 
+
                 delayAware = False
+
                 for control in range(0,controlGroups):
 
                     TServices = []
@@ -566,10 +578,12 @@ if __name__ == '__main__':
                     resetNodes()
                     satisfiedRequests = 0
 
+
                     totalUnderutilized = 0
 
                     #Start Time
                     startTime = time.time()
+                    
                     if control%6 == 5: # CNFSH-RCRR
                         rateSlices(0)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d.points)
@@ -583,9 +597,11 @@ if __name__ == '__main__':
                         #countCNFRequests(sliceRequests)
                         rateSlices(-1)
                         sortedSlices = sorted(sliceRequests, key=lambda d: d.points)
+
                     else: #NoShare
                         # For the first model there is no sorting
                         sortedSlices = sliceRequests
+
 
                     if control > 5: 
                         delayAware = True
@@ -593,11 +609,14 @@ if __name__ == '__main__':
                     leastCapacityNode = True if control%6 == 2 or control%6 == 5 else False
                     #repeatForDelayAware = False
 
+
                     for r in sortedSlices:
 
                         # Break condition inserted not to lose time to find space if there is no hope
+
                         if (control%3 == 0 and totalRemainingCapacity() < 6) or (control%3 > 0 and totalRemainingCapacity() < 6 and totalUnderutilized < 6):
                             break
+
 
 
 
@@ -612,7 +631,9 @@ if __name__ == '__main__':
 
                             repeatForDelayAware = False
 
+
                             for s in r.services:
+
 
                                 #success = False
                                 foundT = False
@@ -637,6 +658,7 @@ if __name__ == '__main__':
                                                 isGuest = True
                                                 t.fDeployments[0].residualCPU -= functionsCatalog[functionsList[0]]["cpu"]
 
+
                                                 break
 
                                 if not foundT:
@@ -656,6 +678,7 @@ if __name__ == '__main__':
                                                 cpu = u["cpu"]
                                                 av = u["availability"]
                                                 break
+
 
                                         #functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
 
@@ -685,12 +708,12 @@ if __name__ == '__main__':
                                                 repeatForDelayAware = True    
                                                 leastCapacityNode = False
 
-
                                             sliceFailed = True
                                             break
 
                                         t.replicas = netFunc.replicas
                                         t.fDeployments.append(netFunc)
+
 
                                     if sliceFailed:
                                         # Remove other functions of the same service
@@ -704,6 +727,7 @@ if __name__ == '__main__':
                             if repeatForDelayAware == False: break
 
                         if not sliceFailed:
+
                             satisfiedRequests += 1
                             
                             totalUnderutilized += sliceUnderutilized
@@ -722,15 +746,16 @@ if __name__ == '__main__':
                     for n in nodes:
                         totalUtilization += n.capacity - n.remCapacity
 
+
                     if satisfiedRequests != 0:
                     #Average utilization per satisfied slice request
                         avrgUtil = totalUtilization / satisfiedRequests
+
                         #underUtil = totalUnderutilized / sum(d['cap'] for d in originalNodeCapacities)
                         underUtil = totalUnderutilized / totalUtilization
                     else: 
                         avrgUtil = 0
                         underUtil = 0
-
 
 
                     sumOfUsage[control] += avrgUtil
@@ -756,6 +781,7 @@ if __name__ == '__main__':
                     avrgUsage[c] = round(sumOfUsage[c] / numberOfExperiments, 2)
                     avrgUnderUtil[c] = round(sumOfUnderUtil[c] / numberOfExperiments, 6)
                     avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
+
                     avrgTime[c] = round(totalTime[c] / numberOfExperiments, 4) # / numberOfReqs, 4)
 
                     usageLine += str(avrgUsage[c]) + " "
