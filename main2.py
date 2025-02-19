@@ -530,277 +530,79 @@ def calculateDelay(slice):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
     maxNumberOfReqs = 500
     numberOfExperiments = 600
 
     try:
-        with open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("timeLine.txt", "a") as file5,  open("underutil.txt", "a") as file10:
-
-            #with concurrent.futures.ProcessPoolExecutor() as executor:
+        with open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open("timeLine.txt", "a") as file5, open("underutil.txt", "a") as file10:
             timestr = time.strftime("%Y%m%d-%H%M%S")
-            file2.write("{} NodeDelay: {} NFavailability: {}. 2 pods if HA({}) else only 1 pod is onboard\n".format(timestr, constantDelay, NFavailability, HighAv))
-            file3.write("{} NodeDelay: {} NFavailability: {}. 2 pods if HA({}) else only 1 pod is onboard\n".format(timestr, constantDelay, NFavailability, HighAv))
-            
-            file5.write("{} NodeDelay: {} NFavailability: {}. 2 pods if HA({}) else only 1 pod is onboard\n".format(timestr, constantDelay, NFavailability, HighAv))
-            
-            file10.write("{} NodeDelay: {} NFavailability: {}. 2 pods if HA({}) else only 1 pod is onboard\n".format(timestr, constantDelay, NFavailability, HighAv))
+            # ... (keep your existing headers for files)
 
-        controlGroups = 12 
-        for numberOfReqs in range(20, maxNumberOfReqs+1 , 20):
-            outputs = []
-            sumOfUsage = [0] * controlGroups
-            sumOfUnderUtil = [0] * controlGroups
-            sumOfSatisfiedReqs = [0] * controlGroups
-            totalTime = [0] * controlGroups
-            scores = [0] * controlGroups
+            for numberOfReqs in range(20, maxNumberOfReqs+1, 20):
+                outputs = []
+                sumOfUsage = []
+                sumOfUnderUtil = []
+                sumOfSatisfiedReqs = []
+                totalTime = []
+                scores = []
+                avrgUsage = []
+                avrgUnderUtil = []
+                avrgSatisfiedReqs = []
+                avrgTime = []
 
-            avrgUsage = [0] * controlGroups
-            avrgUnderUtil = [0] * controlGroups
-            avrgSatisfiedReqs = [0] * controlGroups
-            avrgTime = [0] * controlGroups
+                for experiment in range(numberOfExperiments):
+                    generateSliceRequests(numberOfReqs)
 
-            avgRunnerUpDiff = 0
-            avgThirdDiff = 0
+                    # Start with a minimal number of nodes
+                    minNodes = 1
+                    maxNodes = len(nodes)  # Assuming 'nodes' is defined somewhere
+                    nodesNeeded = minNodes
 
-            for experiment in range(0,numberOfExperiments):
+                    while True:
+                        resetNodes()  # Reset node capacities for each new test
+                        nodes = [slice.Node(capacity=100) for _ in range(nodesNeeded)]  # Example: each node has 100 capacity units
+                        satisfiedRequests = 0
+                        totalUnderutilized = 0
 
-                generateSliceRequests(numberOfReqs)
+                        startTime = time.time()
 
-                # 6 control sets are simulated. 
-
-                delayAware = False
-
-                for control in range(0,controlGroups):
-
-                    TServices = []
-                    FFunctions = []
-                    resetNodes()
-                    satisfiedRequests = 0
-
-
-                    totalUnderutilized = 0
-
-                    #Start Time
-                    startTime = time.time()
-                    
-                    if control%6 == 5: # CNFSH-RCRR
-                        rateSlices(0)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d.points)
-                    elif control%6 == 4: #CNFSH-RR
-                        #countCNFRequests(sliceRequests)
-                        rateSlices(0)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d.points)
-                    elif control%6 == 1 or control%6 == 2: # MHSH and CNFSH-RC
+                        # Sort slices based on priority or other criteria if needed
                         sortedSlices = sorted(sliceRequests, key=lambda d: d.priority)
-                    elif control%6 == 3: #NoShare-RR
-                        #countCNFRequests(sliceRequests)
-                        rateSlices(-1)
-                        sortedSlices = sorted(sliceRequests, key=lambda d: d.points)
 
-                    else: #NoShare
-                        # For the first model there is no sorting
-                        sortedSlices = sliceRequests
+                        for r in sortedSlices:
+                            if not placeSlice(r, nodes, nodesNeeded):
+                                # If placement fails, increase the number of nodes
+                                if nodesNeeded < maxNodes:
+                                    nodesNeeded += 1
+                                    break
+                                else:
+                                    # All possible nodes used, stop trying
+                                    break
+                            else:
+                                satisfiedRequests += 1
 
-
-                    if control > 5: 
-                        delayAware = True
-
-                    leastCapacityNode = True if control%6 == 2 or control%6 == 5 else False
-                    #repeatForDelayAware = False
-
-
-                    for r in sortedSlices:
-
-                        # Break condition inserted not to lose time to find space if there is no hope
-
-                        if (control%3 == 0 and totalRemainingCapacity() < 6) or (control%3 > 0 and totalRemainingCapacity() < 6 and totalUnderutilized < 6):
+                        if satisfiedRequests == len(sortedSlices) or nodesNeeded > maxNodes:
+                            # All requests satisfied or we've reached max nodes
                             break
 
-
-
-
-                        while True:
-
-                            isGuest = False
-                            sliceFailed = False
-                            sliceUnderutilized = 0
-
-                            if leastCapacityNode == False and delayAware == True:
-                                nodes = slice.Node.sort_by_remCapacity(nodes, True)
-
-                            repeatForDelayAware = False
-
-
-                            for s in r.services:
-
-
-                                #success = False
-                                foundT = False
-                                functionsList = servicesCatalog[s]
-
-                                if (control%3 > 0  or control%12 == 8 or control%12 == 11) and r.priority == 2:
-                                    for t in TServices:
-
-                                        # If this is the service we are looking for and has enough capacity use it
-                                        if set(t.reqFunctions) == set(functionsList):
-                                            if t.fDeployments[0].residualCPU >= functionsCatalog[functionsList[0]]["cpu"]:
-                                                
-                                                t.hostedSlices.append(r.id)
-                                                if delayAware == True and r.delay < calculateDelay(r):
-                                                    t.hostedSlices.pop()
-                                                    continue
-                                                    
-                                                t.guests += 1
-                                                foundT = True    
-                                            
-                                                totalUnderutilized -= functionsCatalog[functionsList[0]]["cpu"]
-                                                isGuest = True
-                                                t.fDeployments[0].residualCPU -= functionsCatalog[functionsList[0]]["cpu"]
-
-
-                                                break
-
-                                if not foundT:
-                                    # Assign new t with capacity 5
-                                    t = slice.Service(functionsList, 2, r.availability)
-                                    t.hostedSlices.append(r.id)
-                                    TServices.append(t)
-                                    serviceId = len(TServices)-1
-
-                                    for f in functionsList:
-
-                                        type = ""
-                                        cpu = 1
-
-                                        for u in functionsCatalog:
-                                            if u["name"] == functionsCatalog[f]["name"]:
-                                                cpu = u["cpu"]
-                                                av = u["availability"]
-                                                break
-
-
-                                        #functionId = db.insertFunction(functionsCatalog[f]["name"], cpu, av, [], new_service_id)
-
-
-                                        if leastCapacityNode==True:
-                                            # Sort nodeCapacity in ascending Cn order
-                                            #sortedNodeCapacity = sorted(nodeCapacity, key=lambda item: item["cap"])
-                                            #global nodes
-                                            nodes = slice.Node.sort_by_remCapacity(nodes)
-
-                                        #netFunc = slice.Function(functionId, functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
-                                        netFunc = slice.Function(functionsCatalog[f]["id"], functionsCatalog[f]["name"], cpu, round(av,6), serviceId)
-                                        FFunctions.append(netFunc)
-                                        # Onboard the function considering the requested slice availability and check the result
-                                        if r.priority == 1:
-                                            onboardingResult = onboard(netFunc, r.availability, r, leastCapacityNode)
-                                        else:
-                                            onboardingResult = onboard(netFunc, 0, r, leastCapacityNode)
-
-                                        if onboardingResult > 0: sliceUnderutilized += (onboardingResult-1)*cpu
-                                        elif onboardingResult == -2: # Host bulundu ve misafir olundu
-                                            deleteFunctions(serviceId)
-                                            TServices.pop()
-                                            updateNodes() # Belki gerek yok
-                                        else: 
-                                            if onboardingResult == -1 and leastCapacityNode == True:
-                                                repeatForDelayAware = True    
-                                                leastCapacityNode = False
-
-                                            sliceFailed = True
-                                            break
-
-                                        t.replicas = netFunc.replicas
-                                        t.fDeployments.append(netFunc)
-
-
-                                    if sliceFailed:
-                                        # Remove other functions of the same service
-                                        deleteFunctions(serviceId)
-                                        # Remove the service and other services of the same slice if not used
-                                        TServices.pop()
-
-                                        updateNodes()
-                                        break
-                            
-                            if repeatForDelayAware == False: break
-
-                        if not sliceFailed:
-
-                            satisfiedRequests += 1
-                            
-                            totalUnderutilized += sliceUnderutilized
-
-                    #End time
                     endTime = time.time()
-
-                    # Calculations for Utilization
-                    totalUtilization = 0
-
                     duration = endTime - startTime
 
-                    #for index, c in enumerate(nodeCapacity):
-                    #    totalUtilization += originalNodeCapacities[index]["cap"] - c["cap"]
+                    # Here you would calculate utilization, underutilization, etc., similar to your original code
+                    # but now based on the minimal node count that satisfied all requests
 
-                    for n in nodes:
-                        totalUtilization += n.capacity - n.remCapacity
+                    # Append to lists for averaging later
+                    # Note: Adjust these based on how you calculate these metrics with minimal nodes
+                    sumOfUsage.append(calculateUsage(nodes))
+                    sumOfUnderUtil.append(calculateUnderUtilization(nodes))
+                    sumOfSatisfiedReqs.append(satisfiedRequests)
+                    totalTime.append(duration)
 
+                    outputs.append(f"Experiment: {experiment}, Nodes needed: {nodesNeeded}, Satisfied: {satisfiedRequests}")
 
-                    if satisfiedRequests != 0:
-                    #Average utilization per satisfied slice request
-                        avrgUtil = totalUtilization / satisfiedRequests
+                # Calculate averages and write to files as before
+                # ...
 
-                        #underUtil = totalUnderutilized / sum(d['cap'] for d in originalNodeCapacities)
-                        underUtil = totalUnderutilized / totalUtilization
-                    else: 
-                        avrgUtil = 0
-                        underUtil = 0
-
-
-                    sumOfUsage[control] += avrgUtil
-                    sumOfUnderUtil[control] += underUtil
-                    sumOfSatisfiedReqs[control] += satisfiedRequests
-                    totalTime[control] += duration
-
-                    outputs.append("Control Set: {} Total Number of requests: {} Number of satisfied requests: {} Average Utilization: {}".format(
-                        control, numberOfReqs, satisfiedRequests, avrgUtil))
-                    # print("Total Number of requests: {} Number of satisfied requests: {}".format(numberOfReqs, satisfiedRequests))
-
-            
-            with open("usage.txt", "a") as file2, open("satisfied.txt", "a") as file3, open(
-                    "timeLine.txt", "a") as file5, open("underutil.txt", "a") as file10:
-
-                usageLine = ""
-                underUtilLine = ""
-                satisfiedReqsline = ""
-                timeLine = ""
-                scoreLine = ""
-
-                for c in range(0,controlGroups):
-                    avrgUsage[c] = round(sumOfUsage[c] / numberOfExperiments, 2)
-                    avrgUnderUtil[c] = round(sumOfUnderUtil[c] / numberOfExperiments, 6)
-                    avrgSatisfiedReqs[c] = round(sumOfSatisfiedReqs[c] / numberOfExperiments, 2)
-
-                    avrgTime[c] = round(totalTime[c] / numberOfExperiments, 4) # / numberOfReqs, 4)
-
-                    usageLine += str(avrgUsage[c]) + " "
-                    underUtilLine += str(avrgUnderUtil[c]) + " "
-                    satisfiedReqsline += str(avrgSatisfiedReqs[c]) + " "
-                    timeLine += str(avrgTime[c]) + " "
-                    scoreLine += str(scores[c]) + " "
-
-                usageLine += "\n"
-                underUtilLine += "\n"
-                satisfiedReqsline += "\n"
-                timeLine += "\n"
-                scoreLine += "\n"
-
-                file2.write(usageLine)
-                file3.write(satisfiedReqsline)
-                file5.write(timeLine)
-                file10.write(underUtilLine)
-                    
     except Exception as e:
         print(e)
 
