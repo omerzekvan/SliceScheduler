@@ -10,7 +10,8 @@ class Slice:
     self.points = 0
 
 class Service:
-    def __init__(self, reqFunctions, capacity, availability, bw=0, delay=10):
+    def __init__(self, serviceID, reqFunctions, capacity, availability, bw=0, delay=10):
+        self.serviceID = serviceID
         self.reqFunctions = reqFunctions
         self.capacity = capacity
         self.availability = availability
@@ -18,9 +19,9 @@ class Service:
         self.delay = delay
         self.active = False
         self.replicas = 0
-        self.guests = 0
-        self.hostedSlices = [] # Link to both the host and guest slices
-        self.fDeployments = [] # Link to the network function
+        #self.guests = 0
+        #self.hostedSlices = [] # Link to both the host and guest slices
+        self.functions = [] # Link to the network function
 
     def setReplicas(self, replicas: int):
         self.replicas = replicas
@@ -38,9 +39,9 @@ class Function:
         self.deployedNodes = []
 
         self.active = False
-        self.replicas = 0
         self.guests = 0
         self.pods = []
+        self.hostedSlices = [] # Link to both the host and guest slices
 
     def setReplicas(self, replicas: int):
         self.replicas = replicas
@@ -107,7 +108,7 @@ class Node:
     if reverse == False:
       return Node.sort_by_remCapacity(less) + equal + Node.sort_by_remCapacity(greater)
     else:
-       return Node.sort_by_remCapacity(greater) + equal + Node.sort_by_remCapacity(less)
+       return Node.sort_by_remCapacity(greater, True) + equal + Node.sort_by_remCapacity(less, True)
   @staticmethod
   def reset_nodes(nodes):
     """Resets the remCapacity of each Node in the array to its capacity.
